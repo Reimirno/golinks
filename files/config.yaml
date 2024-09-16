@@ -1,0 +1,24 @@
+server:
+  port:
+    redirector: 8080
+    crud: 8081
+  debug: true
+
+mapper:
+  persistor: boltdb
+  mappers:
+    - type: file
+      name: file1
+      path: ./files/maps.yaml
+    - type: file
+      name: file2
+      path: ./files/maps.json
+    - type: mem
+      name: memory
+      pairs:
+        - path: ggl
+          url: https://google.com
+    - type: bolt
+      name: boltdb
+      path: maps.db
+      timeout: 10

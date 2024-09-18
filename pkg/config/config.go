@@ -11,7 +11,7 @@ import (
 	bolt_mapper "reimirno.com/golinks/pkg/mapper/bolt-mapper"
 	file_mapper "reimirno.com/golinks/pkg/mapper/file-mapper"
 	mem_mapper "reimirno.com/golinks/pkg/mapper/mem-mapper"
-	// sql_mapper "reimirno.com/golinks/pkg/mapper/sql-mapper"
+	sql_mapper "reimirno.com/golinks/pkg/mapper/sql-mapper"
 )
 
 type config struct {
@@ -98,6 +98,12 @@ func (w *mapperConfigurerWrapper) DecodeMapstructure(config *mapstructure.Decode
 				return nil, err
 			}
 			wrapper.MapperConfigurer = &memMapper
+		case sql_mapper.SqlMapperConfigType:
+			var sqlMapper sql_mapper.SqlMapperConfig
+			if err := mapstructure.Decode(raw, &sqlMapper); err != nil {
+				return nil, err
+			}
+			wrapper.MapperConfigurer = &sqlMapper
 		default:
 			return nil, fmt.Errorf("unknown mapper type: %s", mapperType)
 		}

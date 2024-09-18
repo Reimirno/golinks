@@ -10,9 +10,9 @@ mapper:
     - type: file
       name: file1
       path: ./files/maps.yaml
-    - type: file
-      name: file2
-      path: ./files/maps.json
+    # - type: file
+    #   name: file2
+    #   path: ./files/maps.json
     - type: mem
       name: memory
       pairs:
@@ -22,3 +22,8 @@ mapper:
       name: boltdb
       path: maps.db
       timeout: 10
+    # - type: sql
+    #   name:
+    #   driver: 
+    #   dsn: 
+

@@ -5,10 +5,10 @@ type PathUrlPairMap map[string]*PathUrlPair
 type PathUrlPairList []*PathUrlPair
 
 type PathUrlPair struct {
-	Path     string `yaml:"path" json:"path"`
-	Url      string `yaml:"url" json:"url"`
-	Mapper   string
-	UseCount int
+	Path     string `yaml:"path" json:"path" gorm:"primaryKey"`
+	Url      string `yaml:"url" json:"url" gorm:"not null"`
+	Mapper   string `gorm:"-"`
+	UseCount int    `gorm:"not null;default:0"`
 }
 
 func (p PathUrlPairMap) ToList() PathUrlPairList {

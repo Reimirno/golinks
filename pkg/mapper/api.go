@@ -127,6 +127,7 @@ func (m *MapperManager) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, err
 		return nil, err
 	}
 	if old == nil {
+		pair.UseCount = 0
 		return m.persistor.PutUrl(pair)
 	}
 	mapper := findMapper(m.mappers, old.Mapper)

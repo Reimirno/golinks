@@ -36,3 +36,6 @@ bin
 
 # pb
 *.pb.go
+
+# local config
+local-config.yaml

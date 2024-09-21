@@ -1,0 +1,61 @@
+name: Makefile CD
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: "1.22"
+  OUT_DIR: "./build"
+
+jobs:
+  build-and-release:
+    name: Build with make
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Configure
+      uses: ./.github/actions/configure
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - name: Build to all platforms
+      run: make
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}  # Tag name from the push
+        release_name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset for Linux
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.OUT_DIR }}/golink
+        asset_name: golink-linux
+        asset_content_type: application/octet-stream
+    - name: Upload Release Asset for Windows
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.OUT_DIR }}/golink.exe
+        asset_name: golink-windows.exe
+        asset_content_type: application/octet-stream
+    - name: Upload Release Asset for MacOS
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.OUT_DIR }}/golink_darwin
+        asset_name: golink-macos
+        asset_content_type: application/octet-stream

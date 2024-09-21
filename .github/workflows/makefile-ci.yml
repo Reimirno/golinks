@@ -29,6 +29,12 @@ jobs:
         name: code-coverage-${{ matrix.go-version }}
         path: ./coverage/coverage.out
         overwrite: true
+    - name: Upload cover to codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/coverage.out
+        name: code-coverage-${{ matrix.go-version }}
+        token: ${{ secrets.CODECOV_TOKEN }}
   code_coverage:
     name: Code coverage report
     if: github.event_name == 'pull_request'

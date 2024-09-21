@@ -20,7 +20,7 @@ runs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ inputs.go-version }}
-    - name: Installing protoc-gen-go
+    - name: Installing protoc-gen-go and export PATH
       shell: bash
       run: |
         go install github.com/golang/protobuf/protoc-gen-go@latest

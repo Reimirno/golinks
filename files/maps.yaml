@@ -1,4 +1,5 @@
-- path: yt
-  url: https://youtube.com
-- path: gh
-  url: https://github.com 
+data:
+  - path: yt
+    url: https://youtube.com
+  - path: gh
+    url: https://github.com

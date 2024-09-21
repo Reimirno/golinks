@@ -25,7 +25,7 @@ func (f *FileMapperConfig) GetType() string {
 }
 
 func (f *FileMapperConfig) GetMapper() (mapper.Mapper, error) {
-	pairs, err := parseFileInput(f.Path)
+	pairs, err := parseFile(f.Path)
 	if err != nil {
 		return nil, err
 	}

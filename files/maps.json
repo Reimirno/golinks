@@ -1,10 +1,12 @@
-[
-  {
-    "path": "msft",
-    "url": "https://microsoft.com"
-  },
-  {
-    "path": "bd",
-    "url": "https://baidu.com"
-  }
-]
+{
+  "data": [
+    {
+      "path": "msft",
+      "url": "https://microsoft.com"
+    },
+    {
+      "path": "bd",
+      "url": "https://baidu.com"
+    }
+  ]
+}

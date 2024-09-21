@@ -89,7 +89,7 @@ func (m *MapperManager) GetUrl(path string, incrementCounter bool) (*types.PathU
 		}
 		if pair != nil {
 			m.logger.Debugf("Mapper %s used", mapper.GetName())
-			if incrementCounter {
+			if incrementCounter && !mapper.Readonly() {
 				m.logger.Debugf("Try to increment counter at mapper %s: %d -> %d", mapper.GetName(), pair.UseCount, pair.UseCount+1)
 				pair.UseCount = pair.UseCount + 1
 				_, err = mapper.PutUrl(pair)

@@ -35,16 +35,17 @@ type mapperConfig struct {
 func NewConfig(configFile string) (*config, error) {
 	var config config
 
-	viper.SetConfigFile(configFile)
-	viper.SetDefault("Server.Port.Redirector", "8080")
-	viper.SetDefault("Server.Port.Crud", "8081")
-	viper.SetDefault("Server.Debug", false)
+	v := viper.New()
+	v.SetConfigFile(configFile)
+	v.SetDefault("Server.Port.Redirector", "8080")
+	v.SetDefault("Server.Port.Crud", "8081")
+	v.SetDefault("Server.Debug", false)
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	if err := viper.Unmarshal(&config, viper.DecodeHook((&mapperConfigurerWrapper{}).DecodeMapstructure(nil))); err != nil {
+	if err := v.Unmarshal(&config, viper.DecodeHook((&mapperConfigurerWrapper{}).DecodeMapstructure(nil))); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 

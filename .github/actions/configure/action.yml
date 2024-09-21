@@ -20,3 +20,9 @@ runs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ inputs.go-version }}
+    - name: Installing protoc-gen-go
+      shell: bash
+      run: |
+        go install github.com/golang/protobuf/protoc-gen-go@latest
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+        export PATH="$PATH:$(go env GOPATH)/bin"

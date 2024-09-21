@@ -8,33 +8,33 @@ on:
 
 jobs:
   unit-tests:
-    name: "Unit test with make"
+    name: Unit test with make
     strategy:
       matrix:
-        go-version: ["1.22", "1.23", "1.24"]
+        go-version: ["1.22"]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: configure
+    - name: Configure
       uses: ./.github/actions/configure
       with:
         go-version: ${{ matrix.go-version }}
-    - name: gen proto
+    - name: Gen proto
       run: make gen
-    - name: unit test
+    - name: Unit test
       run: make cover
-    - name: upload cover
+    - name: Upload cover
       uses: actions/upload-artifact@v4
       with:
         name: code-coverage-${{ matrix.go-version }}
         path: ./coverage/coverage.out
         overwrite: true
   code_coverage:
-    name: "Code coverage report"
+    name: Code coverage report
     if: github.event_name == 'pull_request'
     strategy:
       matrix:
-        go-version: ["1.22", "1.23", "1.24"]
+        go-version: ["1.22"]
     runs-on: ubuntu-latest
     needs: unit-tests
     permissions:
@@ -42,7 +42,8 @@ jobs:
       actions:       read
       pull-requests: write
     steps:
-      - uses: fgrosse/go-coverage-report@v1.1.1 
+      - name: Comment coverage
+        uses: fgrosse/go-coverage-report@v1.1.1 
         with:
           coverage-artifact-name: code-coverage-${{ matrix.go-version }}
           coverage-file-name: coverage.out

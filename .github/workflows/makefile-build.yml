@@ -1,0 +1,23 @@
+name: Makefile Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build with make
+    strategy:
+      matrix:
+        go-version: ["1.22"]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Configure
+      uses: ./.github/actions/configure
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Build to all platforms
+      run: make

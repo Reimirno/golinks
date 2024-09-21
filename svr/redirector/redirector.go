@@ -55,7 +55,7 @@ func NewServer(m *mapper.MapperManager, port string) (*Server, error) {
 			http.Error(rw, msg, statusCode)
 		}
 		if err != nil {
-			handleError(rw, fmt.Sprintf("Error occured when resolving path: %v", err), err, http.StatusInternalServerError)
+			handleError(rw, fmt.Sprintf("Error occurred when resolving path: %v", err), err, http.StatusInternalServerError)
 			return
 		}
 		if pair != nil {

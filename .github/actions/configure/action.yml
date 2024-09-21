@@ -1,0 +1,22 @@
+name: "configure"
+description: "setup go and protoc"
+inputs:
+  go-version:
+    description: "go version to use"
+    required: false
+    default: "1.23"
+  protoc-version:
+    description: "protoc version to use"
+    required: false
+    default: "23.x"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Protoc
+      uses: arduino/setup-protoc@v3
+      with:
+        version: ${{ inputs.protoc-version }}
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ inputs.go-version }}

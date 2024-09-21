@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/reimirno/golinks/pkg/logging"
+	"github.com/reimirno/golinks/pkg/types"
 	"go.uber.org/zap"
-	"reimirno.com/golinks/pkg/logging"
-	"reimirno.com/golinks/pkg/types"
 )
 
 type MapperIdentityProvider interface {

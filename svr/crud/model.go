@@ -1,8 +1,8 @@
 package crud
 
 import (
-	"reimirno.com/golinks/pkg/pb"
-	"reimirno.com/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/pb"
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 func getProto(s *types.PathUrlPair) *pb.PathUrlPair {

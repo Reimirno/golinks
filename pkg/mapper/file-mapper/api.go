@@ -1,8 +1,8 @@
 package file_mapper
 
 import (
-	"reimirno.com/golinks/pkg/mapper"
-	"reimirno.com/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 const (

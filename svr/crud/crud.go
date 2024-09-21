@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/reimirno/golinks/pkg/logging"
+	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/pb"
+	"github.com/reimirno/golinks/pkg/types"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"reimirno.com/golinks/pkg/logging"
-	"reimirno.com/golinks/pkg/mapper"
-	"reimirno.com/golinks/pkg/pb"
-	"reimirno.com/golinks/pkg/types"
 )
 
 const crudServiceName = "crud"

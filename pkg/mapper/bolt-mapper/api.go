@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"reimirno.com/golinks/pkg/mapper"
-	"reimirno.com/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 const (

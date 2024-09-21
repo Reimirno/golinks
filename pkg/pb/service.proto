@@ -4,7 +4,7 @@ package pb;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "reimirno.com/golinks/pkg/pb";
+option go_package = "github.com/reimirno/golinks/pkg/pb";
 
 service Golinks {
     rpc GetUrl(GetUrlRequest) returns (PathUrlPair) {}

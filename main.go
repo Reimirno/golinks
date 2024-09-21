@@ -7,13 +7,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/reimirno/golinks/pkg/config"
+	"github.com/reimirno/golinks/pkg/logging"
+	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/version"
+	"github.com/reimirno/golinks/svr/crud"
+	"github.com/reimirno/golinks/svr/redirector"
 	"go.uber.org/zap"
-	"reimirno.com/golinks/pkg/config"
-	"reimirno.com/golinks/pkg/logging"
-	"reimirno.com/golinks/pkg/mapper"
-	"reimirno.com/golinks/pkg/version"
-	"reimirno.com/golinks/svr/crud"
-	"reimirno.com/golinks/svr/redirector"
 )
 
 var (

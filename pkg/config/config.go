@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/reimirno/golinks/pkg/mapper"
+	bolt_mapper "github.com/reimirno/golinks/pkg/mapper/bolt-mapper"
+	file_mapper "github.com/reimirno/golinks/pkg/mapper/file-mapper"
+	mem_mapper "github.com/reimirno/golinks/pkg/mapper/mem-mapper"
+	sql_mapper "github.com/reimirno/golinks/pkg/mapper/sql-mapper"
 	"github.com/spf13/viper"
-	"reimirno.com/golinks/pkg/mapper"
-	bolt_mapper "reimirno.com/golinks/pkg/mapper/bolt-mapper"
-	file_mapper "reimirno.com/golinks/pkg/mapper/file-mapper"
-	mem_mapper "reimirno.com/golinks/pkg/mapper/mem-mapper"
-	sql_mapper "reimirno.com/golinks/pkg/mapper/sql-mapper"
 )
 
 type config struct {

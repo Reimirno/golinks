@@ -3,13 +3,13 @@ package sql_mapper
 import (
 	"fmt"
 
+	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/types"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
-	"reimirno.com/golinks/pkg/mapper"
-	"reimirno.com/golinks/pkg/types"
 )
 
 const (

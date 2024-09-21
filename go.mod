@@ -1,4 +1,4 @@
-module reimirno.com/golinks
+module github.com/reimirno/golinks
 
 go 1.22.3
 

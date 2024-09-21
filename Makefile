@@ -8,6 +8,7 @@ DATE?=$(shell date +%Y-%m-%dT%H:%M:%SZ)
 
 OUT_DIR = ./build
 PROTO_DIR = ./pkg/pb
+COVERAGE_DIR = ./coverage
 
 MAIN_FILE=main.go
 PROTO_FILE=service.proto
@@ -34,12 +35,17 @@ linux: gen
 mac: gen
 	$(call BUILD_BINARY,darwin,amd64,$(OUT_DIR)/golink_darwin,$(MAIN_FILE))
 
-test: gen
-	$(GO_TEST) ./...
-
-clean:
-	rm -rf $(OUT_DIR) $(PROTO_DIR)/*.pb.go
-
 define BUILD_BINARY
 	GOOS=$(1) GOARCH=$(2) $(GO_BUILD) -ldflags="-X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildDate=$(DATE)" -o $(3) $(4)
 endef
+
+test:
+	$(GO_TEST) ./...
+
+cover:
+	mkdir -p $(COVERAGE_DIR)
+	$(GO_TEST) -v -coverprofile=$(COVERAGE_DIR)/coverage.out ./...
+	$(GO_CMD) tool cover -html=$(COVERAGE_DIR)/coverage.out -o $(COVERAGE_DIR)/coverage.html
+
+clean:
+	rm -rf $(OUT_DIR) $(PROTO_DIR)/*.pb.go $(COVERAGE_DIR)

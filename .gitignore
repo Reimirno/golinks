@@ -39,3 +39,6 @@ bin
 
 # local config
 local-config.yaml
+
+# coverage
+coverage

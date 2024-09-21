@@ -1,5 +1,9 @@
 package types
 
+import (
+	"sort"
+)
+
 type PathUrlPairMap map[string]*PathUrlPair
 
 type PathUrlPairList []*PathUrlPair
@@ -25,6 +29,52 @@ func (p PathUrlPairList) ToMap() PathUrlPairMap {
 		m[pair.Path] = pair
 	}
 	return m
+}
+
+func (p *PathUrlPair) Equals(other *PathUrlPair) bool {
+	// ignore Mapper and UseCount
+	if p == nil || other == nil {
+		return true
+	}
+	return p.Path == other.Path && p.Url == other.Url
+}
+
+func (m *PathUrlPairMap) Equals(other *PathUrlPairMap) bool {
+	if m == nil || other == nil {
+		return true
+	}
+	if len(*m) != len(*other) {
+		return false
+	}
+	for key, pair := range *m {
+		otherPair, ok := (*other)[key]
+		if !ok || !pair.Equals(otherPair) {
+			return false
+		}
+	}
+	return true
+}
+
+func (l *PathUrlPairList) Equals(other *PathUrlPairList) bool {
+	if l == nil || other == nil {
+		return true
+	}
+	if len(*l) != len(*other) {
+		return false
+	}
+	// orderless comparison
+	sort.SliceStable(*l, func(i, j int) bool {
+		return (*l)[i].Path < (*l)[j].Path
+	})
+	sort.SliceStable(*other, func(i, j int) bool {
+		return (*other)[i].Path < (*other)[j].Path
+	})
+	for i, pair := range *l {
+		if *pair != *(*other)[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type Service interface {

@@ -9,31 +9,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-var loggerSet *zap.Logger
-
-func Initialize(debug bool) error {
-	var err error
-	var logger *zap.Logger
-	if debug {
-		logger, err = zap.NewDevelopment()
-	} else {
-		logger, err = zap.NewProduction()
-	}
-	if err != nil {
-		return err
-	}
-	loggerSet = logger
-	defer loggerSet.Sync()
-	return nil
-}
-
-func NewLogger(name string) *zap.SugaredLogger {
-	if loggerSet == nil {
-		Initialize(true)
-	}
-	return loggerSet.Named(name).Sugar()
-}
-
 func GrpcInterceptor(logger *zap.SugaredLogger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		logger.Infow("Received gRPC request", "method", info.FullMethod)

@@ -28,6 +28,9 @@ func Initialize(debug bool) error {
 }
 
 func NewLogger(name string) *zap.SugaredLogger {
+	if loggerSet == nil {
+		Initialize(true)
+	}
 	return loggerSet.Named(name).Sugar()
 }
 

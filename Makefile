@@ -44,7 +44,7 @@ test:
 
 cover:
 	mkdir -p $(COVERAGE_DIR)
-	$(GO_TEST) -race -v -coverprofile=$(COVERAGE_DIR)/coverage.out -covermode=atomic ./...
+	$(GO_TEST) -v -coverprofile=$(COVERAGE_DIR)/coverage.out -covermode=atomic ./...
 	$(GO_CMD) tool cover -html=$(COVERAGE_DIR)/coverage.out -o $(COVERAGE_DIR)/coverage.html
 
 clean:

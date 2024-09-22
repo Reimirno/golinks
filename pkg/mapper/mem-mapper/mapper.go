@@ -24,26 +24,25 @@ func (m *MemMapper) Teardown() error {
 	return nil
 }
 
-func (f *MemMapper) GetUrl(path string) (*types.PathUrlPair, error) {
-	pair, ok := f.pairs[path]
-	if !ok {
-		return nil, nil
+func (m *MemMapper) GetUrl(path string) (*types.PathUrlPair, error) {
+	if pair, ok := m.pairs[path]; ok {
+		return pair, nil
 	}
-	return pair, nil
+	return nil, nil
 }
 
-func (f *MemMapper) ListUrls() (types.PathUrlPairList, error) {
-	return f.pairs.ToList(), nil
+func (m *MemMapper) ListUrls() (types.PathUrlPairList, error) {
+	return m.pairs.ToList(), nil
 }
 
-func (f *MemMapper) DeleteUrl(path string) error {
+func (m *MemMapper) DeleteUrl(path string) error {
 	return mapper.ErrOperationNotSupported("delete")
 }
 
-func (f *MemMapper) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, error) {
+func (m *MemMapper) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, error) {
 	return nil, mapper.ErrOperationNotSupported("put")
 }
 
-func (f *MemMapper) Readonly() bool {
+func (m *MemMapper) Readonly() bool {
 	return true
 }

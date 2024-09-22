@@ -46,35 +46,36 @@ func NewServer(m *mapper.MapperManager, port string) (*Server, error) {
 	r := mux.NewRouter()
 	l := logging.NewLogger(redirectorServiceName)
 	r.Use(logging.HttpMiddleware(l))
-
-	r.HandleFunc("/{path}", func(rw http.ResponseWriter, r *http.Request) {
-		path := mux.Vars(r)["path"]
-		pair, err := m.GetUrl(path, true)
-		handleError := func(rw http.ResponseWriter, msg string, err error, statusCode int) {
-			l.Errorf("%s: %v", msg, err)
-			http.Error(rw, msg, statusCode)
-		}
-		if err != nil {
-			handleError(rw, fmt.Sprintf("Error occurred when resolving path: %v", err), err, http.StatusInternalServerError)
-			return
-		}
-		if pair != nil {
-			l.Infof("Mapping found: %s -> %s", path, pair.Url)
-			http.Redirect(rw, r, pair.Url, http.StatusFound)
-			return
-		}
-		handleError(rw, fmt.Sprintf("Mapping not found: %s", path), nil, http.StatusNotFound)
-	}).Methods("GET")
-
 	s := &http.Server{
 		Addr:    fmt.Sprintf(":%s", port),
 		Handler: r,
 	}
-
-	return &Server{
+	svr := &Server{
 		server:  s,
 		logger:  l,
 		manager: m,
 		port:    port,
-	}, nil
+	}
+	r.HandleFunc("/{path}", svr.handleRedirect).Methods("GET")
+	return svr, nil
+}
+
+func (s *Server) handleRedirect(rw http.ResponseWriter, r *http.Request) {
+	path := mux.Vars(r)["path"]
+	pair, err := s.manager.GetUrl(path, true)
+
+	handleError := func(rw http.ResponseWriter, msg string, err error, statusCode int) {
+		s.logger.Errorf("%s: %v", msg, err)
+		http.Error(rw, msg, statusCode)
+	}
+	if err != nil {
+		handleError(rw, fmt.Sprintf("Error occurred when resolving path: %v", err), err, http.StatusInternalServerError)
+		return
+	}
+	if pair != nil {
+		s.logger.Infof("Mapping found: %s -> %s", path, pair.Url)
+		http.Redirect(rw, r, pair.Url, http.StatusFound)
+		return
+	}
+	handleError(rw, fmt.Sprintf("Mapping not found: %s", path), nil, http.StatusNotFound)
 }

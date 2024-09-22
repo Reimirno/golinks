@@ -51,13 +51,23 @@ func NewMapperManager(persistorName string, mapConfigs []MapperConfigurer) (*Map
 
 	m, err := validateAndGetMappers(mapConfigs)
 	if err != nil {
-		l.Errorf("failed to validate mapper configurators: %v", err)
+		l.Errorf("Failed to validate mapper configurators: %v", err)
 		return nil, err
 	}
-	p, err := getPersistor(persistorName, m)
+	pIdx, err := getPersistorIndex(persistorName, m)
 	if err != nil {
-		l.Errorf("failed to get persistor: %v", err)
+		l.Errorf("Failed to get persistor: %v", err)
 		return nil, err
+	}
+
+	var p Mapper
+	if pIdx >= 0 {
+		p = m[pIdx]
+		if pIdx > 0 {
+			l.Warn("Persistor is not the first mapper; some overrides may not work as expected")
+		}
+	} else {
+		l.Warn("No persistor is configured")
 	}
 
 	return &MapperManager{
@@ -71,7 +81,7 @@ func (m *MapperManager) Teardown() error {
 	for _, mapper := range m.mappers {
 		err := mapper.Teardown()
 		if err != nil {
-			m.logger.Errorf("failed to teardown mapper %s: %v", mapper.GetName(), err)
+			m.logger.Errorf("Failed to teardown mapper %s: %v", mapper.GetName(), err)
 			return err
 		}
 	}
@@ -80,6 +90,8 @@ func (m *MapperManager) Teardown() error {
 }
 
 func (m *MapperManager) GetUrl(path string, incrementCounter bool) (*types.PathUrlPair, error) {
+	// mapper order is important here
+	// mappers in the front takes precedence over mappers in the back
 	for _, mapper := range m.mappers {
 		m.logger.Debugf("Trying mapper %s for path %s", mapper.GetName(), path)
 		pair, err := mapper.GetUrl(path)
@@ -105,21 +117,31 @@ func (m *MapperManager) GetUrl(path string, incrementCounter bool) (*types.PathU
 }
 
 func (m *MapperManager) ListUrls() (types.PathUrlPairList, error) {
-	var allUrls []*types.PathUrlPair
+	// mapper order is important here
+	// mappers in the front takes precedence over mappers in the back
+	var urlMap = make(types.PathUrlPairMap)
 	for _, mapper := range m.mappers {
 		urls, err := mapper.ListUrls()
 		if err != nil {
 			return nil, err
 		}
-		allUrls = append(allUrls, urls...)
+		for _, url := range urls {
+			if urlMap[url.Path] == nil {
+				urlMap[url.Path] = url
+			}
+		}
 	}
-	m.logger.Debugf("found %d urls", len(allUrls))
-	return allUrls, nil
+	m.logger.Debugf("found %d urls", len(urlMap))
+	return urlMap.ToList(), nil
+}
+
+func (m *MapperManager) getPersistor() Mapper {
+	return m.persistor
 }
 
 func (m *MapperManager) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, error) {
 	m.logger.Debugf("Setting url: %s -> %s", pair.Path, pair.Url)
-	if m.persistor == nil {
+	if m.getPersistor() == nil {
 		return nil, ErrOperationNotSupported("set")
 	}
 	old, err := m.GetUrl(pair.Path, false)
@@ -128,7 +150,7 @@ func (m *MapperManager) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, err
 	}
 	if old == nil {
 		pair.UseCount = 0
-		return m.persistor.PutUrl(pair)
+		return m.getPersistor().PutUrl(pair)
 	}
 	mapper := findMapper(m.mappers, old.Mapper)
 	if mapper == nil {
@@ -139,7 +161,7 @@ func (m *MapperManager) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, err
 
 func (m *MapperManager) DeleteUrl(path string) error {
 	m.logger.Debugf("Deleting url: %s", path)
-	if m.persistor == nil {
+	if m.getPersistor() == nil {
 		return ErrOperationNotSupported("delete")
 	}
 	old, err := m.GetUrl(path, false)
@@ -157,8 +179,12 @@ func (m *MapperManager) DeleteUrl(path string) error {
 }
 
 func validateAndGetMappers(mapConfigs []MapperConfigurer) ([]Mapper, error) {
+	if len(mapConfigs) == 0 {
+		return nil, ErrMapConfigSetup("no mappers are configured")
+	}
 	mappers := make([]Mapper, 0, len(mapConfigs))
 	typesAppeared := make(map[string]bool)
+	namesAppeared := make(map[string]bool)
 	for _, cfg := range mapConfigs {
 		if cfg == nil {
 			return nil, ErrMapConfigSetup("mapper configurator is nil")
@@ -166,7 +192,11 @@ func validateAndGetMappers(mapConfigs []MapperConfigurer) ([]Mapper, error) {
 		if typesAppeared[cfg.GetType()] && cfg.Singleton() {
 			return nil, ErrMapConfigSetup(fmt.Sprintf("duplicate singleton mapper type: %s", cfg.GetType()))
 		}
+		if namesAppeared[cfg.GetName()] {
+			return nil, ErrMapConfigSetup(fmt.Sprintf("duplicate mapper name: %s", cfg.GetName()))
+		}
 		typesAppeared[cfg.GetType()] = true
+		namesAppeared[cfg.GetName()] = true
 		mapper, err := cfg.GetMapper()
 		if err != nil {
 			return nil, ErrMapConfigSetup(fmt.Sprintf("failed to get mapper for config %s: %v", cfg.GetName(), err.Error()))
@@ -176,25 +206,33 @@ func validateAndGetMappers(mapConfigs []MapperConfigurer) ([]Mapper, error) {
 	return mappers, nil
 }
 
-func getPersistor(persistorName string, mappers []Mapper) (Mapper, error) {
+func getPersistorIndex(persistorName string, mappers []Mapper) (int, error) {
 	if persistorName == "" {
-		return nil, nil
+		return -1, nil
 	}
-	persistor := findMapper(mappers, persistorName)
-	if persistor == nil {
-		return nil, ErrMapConfigSetup(fmt.Sprintf("persistor not found: %s", persistorName))
+	persistorIdx := findMapperIndex(mappers, persistorName)
+	if persistorIdx < 0 {
+		return -1, ErrMapConfigSetup(fmt.Sprintf("persistor not found: %s", persistorName))
 	}
-	if persistor.Readonly() {
-		return nil, ErrMapConfigSetup(fmt.Sprintf("persistor is readonly: %s", persistorName))
+	if mappers[persistorIdx].Readonly() {
+		return -1, ErrMapConfigSetup(fmt.Sprintf("persistor is readonly: %s", persistorName))
 	}
-	return persistor, nil
+	return persistorIdx, nil
+}
+
+func findMapperIndex(mappers []Mapper, name string) int {
+	for idx, mapper := range mappers {
+		if mapper.GetName() == name {
+			return idx
+		}
+	}
+	return -1
 }
 
 func findMapper(mappers []Mapper, name string) Mapper {
-	for _, mapper := range mappers {
-		if mapper.GetName() == name {
-			return mapper
-		}
+	idx := findMapperIndex(mappers, name)
+	if idx < 0 {
+		return nil
 	}
-	return nil
+	return mappers[idx]
 }

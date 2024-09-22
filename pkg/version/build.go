@@ -5,6 +5,10 @@ import (
 	"runtime"
 )
 
+const (
+	versionFormat = "Build version: %s; Commit: %s; Build date: %s; Go version: %s; OS/Arch: %s/%s"
+)
+
 type BuildVersion struct {
 	Version   string
 	Commit    string
@@ -12,5 +16,5 @@ type BuildVersion struct {
 }
 
 func (b BuildVersion) String() string {
-	return fmt.Sprintf("Build version: %s; Commit: %s; Build date: %s; Go version: %s; OS/Arch: %s/%s", b.Version, b.Commit, b.BuildDate, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	return fmt.Sprintf(versionFormat, b.Version, b.Commit, b.BuildDate, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }

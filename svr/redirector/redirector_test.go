@@ -1,122 +1,154 @@
 package redirector
 
-// import (
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	"github.com/gorilla/mux"
-// 	"github.com/reimirno/golinks/pkg/mapper"
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/mock"
+	"github.com/gorilla/mux"
+	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/types"
+	"github.com/stretchr/testify/assert"
+)
 
-// 	"github.com/reimirno/golinks/pkg/types"
-// )
+var (
+	fakePair = &types.PathUrlPair{
+		Path: "fk",
+		Url:  "https://fake.com",
+	}
+	fakePairAlt = &types.PathUrlPair{
+		Path: "fk",
+		Url:  "https://fakealt.com",
+	}
+	fakePair2 = &types.PathUrlPair{
+		Path: "fk2",
+		Url:  "https://fake2.com",
+	}
 
-// // MockMapperManager is a mock implementation of mapper.MapperManager
-// type MockMapperManager struct {
-// 	mock.Mock
-// }
+	mockConfigurer = &mapper.MockMapperConfigurer{
+		Name:        "mock",
+		IsSingleton: false,
+		IsReadOnly:  false,
+		StarterPairs: types.PathUrlPairMap{
+			"fk":  fakePair,
+			"fk2": fakePair2,
+		},
+	}
+	mockConfigurerAlt = &mapper.MockMapperConfigurer{
+		Name:        "mockAlt",
+		IsSingleton: false,
+		IsReadOnly:  false,
+		StarterPairs: types.PathUrlPairMap{
+			"fk": fakePairAlt,
+		},
+	}
+)
 
-// func (m *MockMapperManager) GetUrl(path string, incrementUseCount bool) (*types.PathUrlPair, error) {
-// 	args := m.Called(path, incrementUseCount)
-// 	if args.Get(0) == nil {
-// 		return nil, args.Error(1)
-// 	}
-// 	return args.Get(0).(*types.PathUrlPair), args.Error(1)
-// }
+func TestNewServer(t *testing.T) {
+	tests := []struct {
+		name          string
+		configurers   []mapper.MapperConfigurer
+		persistorName string
+		port          string
+		wantErr       bool
+	}{
+		{
+			name:          "happy path",
+			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			port:          "8080",
+			wantErr:       false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			assert.NoError(t, err)
+			assert.NotNil(t, mm)
+			server, err := NewServer(mm, test.port)
+			if test.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, server)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, server)
+				assert.Equal(t, test.port, server.port)
+				assert.Equal(t, mm, server.manager)
+			}
+		})
+	}
+}
 
-// func (m *MockMapperManager) DeleteUrl(path string) error {
-// 	args := m.Called(path)
-// 	return args.Error(0)
-// }
+func TestServer_GetName(t *testing.T) {
+	server := &Server{}
+	assert.Equal(t, redirectorServiceName, server.GetName())
+}
 
-// func (m *MockMapperManager) GetName() string {
-// 	return "MockMapperManager"
-// }
+func TestServer_handleRedirect(t *testing.T) {
+	tests := []struct {
+		name          string
+		configurers   []mapper.MapperConfigurer
+		persistorName string
+		path          string
+		statusCode    int
+		redirectUrl   string
+	}{
+		{
+			name:          "happy path",
+			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			path:          "fk",
+			redirectUrl:   fakePair.Url,
+			statusCode:    http.StatusFound,
+		},
+		{
+			name:          "not found",
+			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			path:          "invalid",
+			statusCode:    http.StatusNotFound,
+		},
+		{
+			name:          "precedence",
+			configurers:   []mapper.MapperConfigurer{mockConfigurer, mockConfigurerAlt},
+			persistorName: "mock",
+			path:          "fk",
+			redirectUrl:   fakePair.Url,
+			statusCode:    http.StatusFound,
+		},
+		{
+			name:          "precedence 2",
+			configurers:   []mapper.MapperConfigurer{mockConfigurerAlt, mockConfigurer},
+			persistorName: "mock",
+			path:          "fk",
+			redirectUrl:   fakePairAlt.Url,
+			statusCode:    http.StatusFound,
+		},
+	}
 
-// func (m *MockMapperManager) GetType() string {
-// 	return "MockMapperManager"
-// }
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			assert.NoError(t, err)
+			assert.NotNil(t, mm)
+			server, err := NewServer(mm, "8080")
+			assert.NoError(t, err)
+			assert.NotNil(t, server)
 
-// func (m *MockMapperManager) ListUrls() ([]*types.PathUrlPair, error) {
-// 	args := m.Called()
-// 	return args.Get(0).([]*types.PathUrlPair), args.Error(1)
-// }
+			req, err := http.NewRequest("GET", "/"+test.path, nil)
+			assert.NoError(t, err)
+			assert.NotNil(t, req)
 
-// var _ mapper.MapperManager = (*MockMapperManager)(nil)
+			r := mux.NewRouter()
+			r.HandleFunc("/{path}", server.handleRedirect).Methods("GET")
 
-// func TestNewServer(t *testing.T) {
-// 	m := &MockMapperManager{}
-// 	server, err := NewServer(m, "8080")
+			rr := httptest.NewRecorder()
+			r.ServeHTTP(rr, req)
 
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, server)
-// 	assert.Equal(t, ":8080", server.server.Addr)
-// 	assert.Equal(t, "8080", server.port)
-// 	assert.Equal(t, m, server.manager)
-// }
-
-// func TestServer_GetName(t *testing.T) {
-// 	server := &Server{}
-// 	assert.Equal(t, redirectorServiceName, server.GetName())
-// }
-
-// func TestServer_handleRedirect(t *testing.T) {
-// 	tests := []struct {
-// 		name           string
-// 		path           string
-// 		mockReturn     *types.PathUrlPair
-// 		mockError      error
-// 		expectedStatus int
-// 		expectedURL    string
-// 	}{
-// 		{
-// 			name:           "Successful redirect",
-// 			path:           "example",
-// 			mockReturn:     &types.PathUrlPair{Url: "https://example.com"},
-// 			mockError:      nil,
-// 			expectedStatus: http.StatusFound,
-// 			expectedURL:    "https://example.com",
-// 		},
-// 		{
-// 			name:           "Mapping not found",
-// 			path:           "nonexistent",
-// 			mockReturn:     nil,
-// 			mockError:      nil,
-// 			expectedStatus: http.StatusNotFound,
-// 			expectedURL:    "",
-// 		},
-// 		{
-// 			name:           "Error occurred",
-// 			path:           "error",
-// 			mockReturn:     nil,
-// 			mockError:      assert.AnError,
-// 			expectedStatus: http.StatusInternalServerError,
-// 			expectedURL:    "",
-// 		},
-// 	}
-
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			m := &MockMapperManager{}
-// 			m.On("GetUrl", tt.path, true).Return(tt.mockReturn, tt.mockError)
-
-// 			server, _ := NewServer(m, "8080")
-
-// 			req, _ := http.NewRequest("GET", "/"+tt.path, nil)
-// 			rr := httptest.NewRecorder()
-
-// 			router := mux.NewRouter()
-// 			router.HandleFunc("/{path}", server.handleRedirect)
-// 			router.ServeHTTP(rr, req)
-
-// 			assert.Equal(t, tt.expectedStatus, rr.Code)
-// 			if tt.expectedURL != "" {
-// 				assert.Equal(t, tt.expectedURL, rr.Header().Get("Location"))
-// 			}
-
-// 			m.AssertExpectations(t)
-// 		})
-// 	}
-// }
+			assert.Equal(t, test.statusCode, rr.Code)
+			if test.statusCode == http.StatusFound {
+				assert.Equal(t, test.redirectUrl, rr.Header().Get("Location"))
+			}
+		})
+	}
+}

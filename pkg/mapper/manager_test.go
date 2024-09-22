@@ -5,102 +5,7 @@ import (
 
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
-
-// MockMapper is a mock implementation of the Mapper interface for testing purposes.
-// It uses a in-memory map to store PathUrlPair objects.
-// Supports all operations, but does persist anything.
-type MockMapper struct {
-	mock.Mock
-	pairs    types.PathUrlPairMap
-	readonly bool
-	name     string
-}
-
-func (m *MockMapper) GetType() string {
-	return "mock"
-}
-
-func (m *MockMapper) GetName() string {
-	return m.name
-}
-
-func (m *MockMapper) Readonly() bool {
-	return m.readonly
-}
-
-func (m *MockMapper) GetUrl(path string) (*types.PathUrlPair, error) {
-	if pair, ok := m.pairs[path]; ok {
-		return pair, nil
-	}
-	return nil, nil
-}
-
-func (m *MockMapper) ListUrls() (types.PathUrlPairList, error) {
-	return m.pairs.ToList(), nil
-}
-
-func (m *MockMapper) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, error) {
-	if m.readonly {
-		return nil, ErrOperationNotSupported("put")
-	}
-	Sanitize(m, pair)
-	m.pairs[pair.Path] = pair
-	return pair, nil
-}
-
-func (m *MockMapper) DeleteUrl(path string) error {
-	if m.readonly {
-		return ErrOperationNotSupported("delete")
-	}
-	delete(m.pairs, path)
-	return nil
-}
-
-func (m *MockMapper) Teardown() error {
-	return nil
-}
-
-var _ Mapper = (*MockMapper)(nil)
-
-// MockMapperConfigurer is a mock implementation of the MapperConfigurer interface for testing purposes.
-// It just returns a new MockMapper instance.
-type MockMapperConfigurer struct {
-	mock.Mock
-	name         string
-	singleton    bool
-	readonly     bool
-	starterPairs types.PathUrlPairMap
-}
-
-func (m *MockMapperConfigurer) GetType() string {
-	return "mock"
-}
-
-func (m *MockMapperConfigurer) GetName() string {
-	return m.name
-}
-
-func (m *MockMapperConfigurer) GetMapper() (Mapper, error) {
-	mapper := new(MockMapper)
-	mapper.pairs = m.starterPairs
-	for _, pair := range mapper.pairs {
-		pair.Mapper = m.name
-	}
-	mapper.readonly = m.readonly
-	mapper.name = m.name
-	if mapper.pairs == nil {
-		mapper.pairs = make(types.PathUrlPairMap)
-	}
-	return mapper, nil
-}
-
-func (m *MockMapperConfigurer) Singleton() bool {
-	return m.singleton
-}
-
-var _ MapperConfigurer = (*MockMapperConfigurer)(nil)
 
 var (
 	fakePair = &types.PathUrlPair{
@@ -121,39 +26,39 @@ var (
 	}
 
 	mockConfigurer = &MockMapperConfigurer{
-		name:      "mock",
-		singleton: false,
-		readonly:  false,
-		starterPairs: types.PathUrlPairMap{
+		Name:        "mock",
+		IsSingleton: false,
+		IsReadOnly:  false,
+		StarterPairs: types.PathUrlPairMap{
 			"fk":  fakePair,
 			"fk2": fakePair2,
 		},
 	}
 	mockConfigurerAlt = &MockMapperConfigurer{
-		name:      "mockAlt",
-		singleton: false,
-		readonly:  false,
-		starterPairs: types.PathUrlPairMap{
+		Name:        "mockAlt",
+		IsSingleton: false,
+		IsReadOnly:  false,
+		StarterPairs: types.PathUrlPairMap{
 			"fk": fakePairAlt,
 		},
 	}
 	mockConfigurer2 = &MockMapperConfigurer{
-		name:      "mock2",
-		singleton: false,
-		readonly:  false,
-		starterPairs: types.PathUrlPairMap{
+		Name:        "mock2",
+		IsSingleton: false,
+		IsReadOnly:  false,
+		StarterPairs: types.PathUrlPairMap{
 			"fk3": fakePair3,
 		},
 	}
 	mockConfigurerReadonly = &MockMapperConfigurer{
-		name:      "mockReadonly",
-		singleton: false,
-		readonly:  true,
+		Name:        "mockReadonly",
+		IsSingleton: false,
+		IsReadOnly:  true,
 	}
 	mockConfigurerSingleton = &MockMapperConfigurer{
-		name:      "mockSingleton",
-		singleton: true,
-		readonly:  false,
+		Name:        "mockSingleton",
+		IsSingleton: true,
+		IsReadOnly:  false,
 	}
 )
 
@@ -167,7 +72,7 @@ func TestNewMapperManager(t *testing.T) {
 		{
 			name:          "happy path",
 			configurers:   []MapperConfigurer{mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			wantErr:       false,
 		},
 		{
@@ -185,19 +90,19 @@ func TestNewMapperManager(t *testing.T) {
 		{
 			name:          "duplicate non-singleton should pass",
 			configurers:   []MapperConfigurer{mockConfigurer, mockConfigurerReadonly},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			wantErr:       false,
 		},
 		{
 			name:          "duplicate name should fail",
 			configurers:   []MapperConfigurer{mockConfigurer, mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			wantErr:       true,
 		},
 		{
 			name:          "duplicate singleton should fail",
 			configurers:   []MapperConfigurer{mockConfigurer, mockConfigurerSingleton},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			wantErr:       true,
 		},
 		{
@@ -236,17 +141,17 @@ func TestMapperManager_ListUrls(t *testing.T) {
 		{
 			name:        "happy path",
 			configurers: []MapperConfigurer{mockConfigurer},
-			numUrls:     len(mockConfigurer.starterPairs),
+			numUrls:     len(mockConfigurer.StarterPairs),
 		},
 		{
 			name:        "multiple mappers",
 			configurers: []MapperConfigurer{mockConfigurer, mockConfigurer2},
-			numUrls:     len(mockConfigurer.starterPairs) + len(mockConfigurer2.starterPairs),
+			numUrls:     len(mockConfigurer.StarterPairs) + len(mockConfigurer2.StarterPairs),
 		},
 		{
 			name:        "multiple mappers with overlap",
 			configurers: []MapperConfigurer{mockConfigurer, mockConfigurerAlt},
-			numUrls:     len(mockConfigurer.starterPairs),
+			numUrls:     len(mockConfigurer.StarterPairs),
 		},
 	}
 
@@ -273,14 +178,14 @@ func TestMapperManager_GetUrl(t *testing.T) {
 		{
 			name:          "happy path",
 			configurers:   []MapperConfigurer{mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			path:          "fk",
 			url:           fakePair,
 		},
 		{
 			name:          "path not found",
 			configurers:   []MapperConfigurer{mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			path:          "invalid",
 			url:           nil,
 			wantErr:       false,
@@ -288,7 +193,7 @@ func TestMapperManager_GetUrl(t *testing.T) {
 		{
 			name:          "order of configurers is important",
 			configurers:   []MapperConfigurer{mockConfigurerAlt, mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			path:          "fk",
 			url:           fakePairAlt,
 		},
@@ -334,14 +239,14 @@ func TestMapperManager_PutUrl(t *testing.T) {
 		{
 			name:          "happy path update",
 			configurers:   []MapperConfigurer{mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			pair:          fakePairAlt,
 			finalPair:     fakePairAlt,
 		},
 		{
 			name:          "happy path insert",
 			configurers:   []MapperConfigurer{mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			pair:          fakePair3,
 			finalPair:     fakePair3,
 		},
@@ -355,7 +260,7 @@ func TestMapperManager_PutUrl(t *testing.T) {
 		{
 			name:          "update still respects precedence",
 			configurers:   []MapperConfigurer{mockConfigurerAlt, mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			pair:          &types.PathUrlPair{Path: "fk", Url: "https://new.com"},
 			finalPair:     fakePairAlt, // GET still retrieve from mockConfigurerAlt, as it takes precedence
 		},
@@ -392,7 +297,7 @@ func TestMapperManager_DeleteUrl(t *testing.T) {
 		{
 			name:          "happy path",
 			configurers:   []MapperConfigurer{mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			path:          "fk",
 			wantErr:       false,
 			finalPair:     nil,
@@ -400,7 +305,7 @@ func TestMapperManager_DeleteUrl(t *testing.T) {
 		{
 			name:          "path not found is fine",
 			configurers:   []MapperConfigurer{mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			path:          "invalid",
 			wantErr:       false,
 			finalPair:     nil,
@@ -415,7 +320,7 @@ func TestMapperManager_DeleteUrl(t *testing.T) {
 		{
 			name:          "delete still respects precedence",
 			configurers:   []MapperConfigurer{mockConfigurerAlt, mockConfigurer},
-			persistorName: mockConfigurer.name,
+			persistorName: mockConfigurer.Name,
 			path:          "fk",
 			finalPair:     fakePairAlt, // GET still retrieve from mockConfigurerAlt, as it takes precedence
 		},

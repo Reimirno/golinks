@@ -90,6 +90,7 @@ func (m *MapperManager) Teardown() error {
 }
 
 func (m *MapperManager) GetUrl(path string, incrementCounter bool) (*types.PathUrlPair, error) {
+	m.logger.Debugf("Getting url: %s", path)
 	// mapper order is important here
 	// mappers in the front takes precedence over mappers in the back
 	for _, mapper := range m.mappers {
@@ -117,6 +118,7 @@ func (m *MapperManager) GetUrl(path string, incrementCounter bool) (*types.PathU
 }
 
 func (m *MapperManager) ListUrls() (types.PathUrlPairList, error) {
+	m.logger.Debugf("Listing urls")
 	// mapper order is important here
 	// mappers in the front takes precedence over mappers in the back
 	var urlMap = make(types.PathUrlPairMap)

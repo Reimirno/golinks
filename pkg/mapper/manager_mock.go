@@ -98,3 +98,20 @@ func (m *MockMapperConfigurer) Singleton() bool {
 }
 
 var _ MapperConfigurer = (*MockMapperConfigurer)(nil)
+
+func CloneConfigurers(configurers []*MockMapperConfigurer) []MapperConfigurer {
+	copied := make([]MapperConfigurer, len(configurers))
+	for i, configurer := range configurers {
+		element := &MockMapperConfigurer{
+			Name:         configurer.Name,
+			IsSingleton:  configurer.IsSingleton,
+			IsReadOnly:   configurer.IsReadOnly,
+			StarterPairs: make(types.PathUrlPairMap),
+		}
+		for path, pair := range configurer.StarterPairs {
+			element.StarterPairs[path] = pair
+		}
+		copied[i] = element
+	}
+	return copied
+}

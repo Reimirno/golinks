@@ -119,6 +119,7 @@ func TestParseFile(t *testing.T) {
 			name:           "empty file",
 			tempFileConfig: emptyFileConfig,
 			expectedError:  false,
+			expectedPairs:  &types.PathUrlPairList{},
 		},
 		{
 			name:           "invalid file",

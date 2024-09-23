@@ -202,7 +202,7 @@ func TestMapperManager_GetUrl(t *testing.T) {
 			configurers:   []MapperConfigurer{mockConfigurerReadonly},
 			persistorName: "",
 			path:          "fk",
-			url:           fakePair,
+			url:           nil,
 			wantErr:       false,
 		},
 	}
@@ -230,7 +230,7 @@ func TestMapperManager_GetUrl(t *testing.T) {
 func TestMapperManager_PutUrl(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []MapperConfigurer
+		configurers   []*MockMapperConfigurer
 		persistorName string
 		pair          *types.PathUrlPair
 		wantErr       bool
@@ -238,37 +238,37 @@ func TestMapperManager_PutUrl(t *testing.T) {
 	}{
 		{
 			name:          "happy path update",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []*MockMapperConfigurer{mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			pair:          fakePairAlt,
 			finalPair:     fakePairAlt,
 		},
 		{
 			name:          "happy path insert",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []*MockMapperConfigurer{mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			pair:          fakePair3,
 			finalPair:     fakePair3,
 		},
 		{
 			name:          "readonly mapper should fail",
-			configurers:   []MapperConfigurer{mockConfigurerReadonly},
+			configurers:   []*MockMapperConfigurer{mockConfigurerReadonly},
 			persistorName: "",
 			pair:          fakePair3,
 			wantErr:       true,
 		},
 		{
-			name:          "update still respects precedence",
-			configurers:   []MapperConfigurer{mockConfigurerAlt, mockConfigurer},
+			name:          "update a key repeated at two mappers only update from first",
+			configurers:   []*MockMapperConfigurer{mockConfigurerAlt, mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			pair:          &types.PathUrlPair{Path: "fk", Url: "https://new.com"},
-			finalPair:     fakePairAlt, // GET still retrieve from mockConfigurerAlt, as it takes precedence
+			finalPair:     &types.PathUrlPair{Path: "fk", Url: "https://new.com"},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := NewMapperManager(test.persistorName, test.configurers)
+			mm, err := NewMapperManager(test.persistorName, CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			pair, err := mm.PutUrl(test.pair)
 			if test.wantErr {
@@ -288,7 +288,7 @@ func TestMapperManager_PutUrl(t *testing.T) {
 func TestMapperManager_DeleteUrl(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []MapperConfigurer
+		configurers   []*MockMapperConfigurer
 		persistorName string
 		path          string
 		wantErr       bool
@@ -296,7 +296,7 @@ func TestMapperManager_DeleteUrl(t *testing.T) {
 	}{
 		{
 			name:          "happy path",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []*MockMapperConfigurer{mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			path:          "fk",
 			wantErr:       false,
@@ -304,7 +304,7 @@ func TestMapperManager_DeleteUrl(t *testing.T) {
 		},
 		{
 			name:          "path not found is fine",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []*MockMapperConfigurer{mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			path:          "invalid",
 			wantErr:       false,
@@ -312,23 +312,23 @@ func TestMapperManager_DeleteUrl(t *testing.T) {
 		},
 		{
 			name:          "readonly mapper should fail",
-			configurers:   []MapperConfigurer{mockConfigurerReadonly},
+			configurers:   []*MockMapperConfigurer{mockConfigurerReadonly},
 			persistorName: "",
 			path:          "fk",
 			wantErr:       true,
 		},
 		{
-			name:          "delete still respects precedence",
-			configurers:   []MapperConfigurer{mockConfigurerAlt, mockConfigurer},
+			name:          "delete a key repeated at two mappers only deletes from first",
+			configurers:   []*MockMapperConfigurer{mockConfigurerAlt, mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			path:          "fk",
-			finalPair:     fakePairAlt, // GET still retrieve from mockConfigurerAlt, as it takes precedence
+			finalPair:     fakePair,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := NewMapperManager(test.persistorName, test.configurers)
+			mm, err := NewMapperManager(test.persistorName, CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			err = mm.DeleteUrl(test.path)
 			if test.wantErr {

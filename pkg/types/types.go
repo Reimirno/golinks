@@ -33,15 +33,21 @@ func (p PathUrlPairList) ToMap() PathUrlPairMap {
 
 func (p *PathUrlPair) Equals(other *PathUrlPair) bool {
 	// ignore Mapper and UseCount
-	if p == nil || other == nil {
+	if p == nil && other == nil {
 		return true
+	}
+	if p == nil || other == nil {
+		return false
 	}
 	return p.Path == other.Path && p.Url == other.Url
 }
 
 func (m *PathUrlPairMap) Equals(other *PathUrlPairMap) bool {
-	if m == nil || other == nil {
+	if m == nil && other == nil {
 		return true
+	}
+	if m == nil || other == nil {
+		return false
 	}
 	if len(*m) != len(*other) {
 		return false
@@ -56,8 +62,11 @@ func (m *PathUrlPairMap) Equals(other *PathUrlPairMap) bool {
 }
 
 func (l *PathUrlPairList) Equals(other *PathUrlPairList) bool {
-	if l == nil || other == nil {
+	if l == nil && other == nil {
 		return true
+	}
+	if l == nil || other == nil {
+		return false
 	}
 	if len(*l) != len(*other) {
 		return false

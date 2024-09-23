@@ -14,7 +14,7 @@ var (
 	}
 )
 
-func TestMemMapperConfig_GetName(t *testing.T) {
+func TestFileMapperConfig_GetName(t *testing.T) {
 	tests := []struct {
 		name         string
 		mapperConfig *FileMapperConfig
@@ -30,7 +30,7 @@ func TestMemMapperConfig_GetName(t *testing.T) {
 	}
 }
 
-func TestMemMapperConfig_GetType(t *testing.T) {
+func TestFileMapperConfig_GetType(t *testing.T) {
 	tests := []struct {
 		name         string
 		mapperConfig *FileMapperConfig
@@ -46,7 +46,7 @@ func TestMemMapperConfig_GetType(t *testing.T) {
 	}
 }
 
-func TestMemMapperConfig_Singleton(t *testing.T) {
+func TestFileMapperConfig_Singleton(t *testing.T) {
 	tests := []struct {
 		name         string
 		mapperConfig *FileMapperConfig
@@ -62,7 +62,7 @@ func TestMemMapperConfig_Singleton(t *testing.T) {
 	}
 }
 
-func TestMemMapperConfig_GetMapper(t *testing.T) {
+func TestFileMapperConfig_GetMapper(t *testing.T) {
 	tests := []struct {
 		name           string
 		tempFileConfig *tempFileConfig

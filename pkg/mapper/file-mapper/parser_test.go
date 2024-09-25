@@ -36,6 +36,15 @@ data:
 `,
 	}
 
+	altYamlFileConfig = &tempFileConfig{
+		name: "test-alt.yaml",
+		content: `
+data:
+  - path: "me"
+    url: "https://me.com"
+`,
+	}
+
 	jsonFileConfig = &tempFileConfig{
 		name: "test.json",
 		content: `

@@ -10,9 +10,11 @@ mapper:
     - type: file
       name: file1
       path: ./files/maps.yaml
+      syncInterval: 60
     # - type: file
     #   name: file2
     #   path: ./files/maps.json
+    #   syncInterval: -1 # disable hot reload
     - type: mem
       name: memory
       pairs:

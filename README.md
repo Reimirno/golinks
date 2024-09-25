@@ -46,12 +46,12 @@ Mappers are key-value stores that map keywords to URLs.
 
 You can specify the mapper in the configuration file. The redirector services supports 4 types of mappers:
 
-| type   | description                                           | configuration | singleton | readonly |
-|--------|-------------------------------------------------------|---------------|-----------|----------|
-| memory | stores mapping in memory                              | pairs         | true      | true     |
-| file   | stores mapping in a local file                        | path          | false     | true     |
-| bolt   | stores mapping in bolt.db (local file-based kv store) | path, timeout | true      | false    |
-| sql    | stores mapping in a SQL database                      | driver, dsn   | true      | true     |
+| type   | description                                           | configuration      | singleton | readonly |
+| ------ | ----------------------------------------------------- | ------------------ | --------- | -------- |
+| memory | stores mapping in memory                              | pairs              | true      | true     |
+| file   | stores mapping in a local file                        | path, syncInterval | false     | true     |
+| bolt   | stores mapping in bolt.db (local file-based kv store) | path, timeout      | true      | false    |
+| sql    | stores mapping in a SQL database                      | driver, dsn        | true      | true     |
 
 `readonly` mappers does not support put or delete operations.
 `singleton` mappers can only exist once in the system. You can specify one single such mapper in the configuration file.

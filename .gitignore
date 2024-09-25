@@ -37,8 +37,8 @@ bin
 # pb
 *.pb.go
 
-# local config
-local-config.yaml
+# local config/mapping files
+local-*
 
 # coverage
 coverage

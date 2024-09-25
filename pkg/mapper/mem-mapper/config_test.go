@@ -117,6 +117,7 @@ func TestMemMapperConfig_GetMapper(t *testing.T) {
 			assert.True(t, ok, "Expected *MemMapper, got %T", got)
 			assert.Equal(t, tt.want.name, memMapper.name)
 			assert.True(t, tt.want.pairs.Equals(&memMapper.pairs), "Expected %v, got %v", tt.want.pairs, memMapper.pairs)
+			assert.NoError(t, memMapper.Teardown())
 		})
 	}
 }

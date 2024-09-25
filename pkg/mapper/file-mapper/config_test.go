@@ -66,11 +66,13 @@ func TestFileMapperConfig_Singleton(t *testing.T) {
 
 func TestFileMapperConfig_GetMapper(t *testing.T) {
 	tests := []struct {
-		name           string
-		tempFileConfig *tempFileConfig
-		want           *FileMapper
-		syncInterval   int
-		expectedError  bool
+		name                        string
+		tempFileConfig              *tempFileConfig
+		want                        *FileMapper
+		syncInterval                int
+		tempFileConfigNextWrite     string
+		expectedPairCountAfterWrite int
+		expectedError               bool
 	}{
 		{
 			name:           "test config with yaml file",
@@ -94,9 +96,22 @@ func TestFileMapperConfig_GetMapper(t *testing.T) {
 			expectedError:  true,
 		},
 		{
-			name:           "test config with sync interval",
-			tempFileConfig: yamlFileConfig,
-			syncInterval:   1,
+			name:                        "test config with sync interval",
+			tempFileConfig:              yamlFileConfig,
+			syncInterval:                1,
+			tempFileConfigNextWrite:     altYamlFileConfig.content,
+			expectedPairCountAfterWrite: 1,
+			want: &FileMapper{
+				name:  yamlFileConfig.name,
+				pairs: pairList.ToMap(),
+			},
+		},
+		{
+			name:                        "test config with sync interval, invalid file",
+			tempFileConfig:              yamlFileConfig,
+			syncInterval:                1,
+			tempFileConfigNextWrite:     malformedYamlFileConfig.content,
+			expectedPairCountAfterWrite: 2, // don't error, still keep original pairs
 			want: &FileMapper{
 				name:  yamlFileConfig.name,
 				pairs: pairList.ToMap(),
@@ -130,10 +145,10 @@ func TestFileMapperConfig_GetMapper(t *testing.T) {
 			assert.True(t, tt.want.pairs.Equals(&fileMapper.pairs), "Expected %v, got %v", tt.want.pairs, fileMapper.pairs)
 			if tt.syncInterval > 0 {
 				assert.NotNil(t, fileMapper.stop)
-				err = os.WriteFile(tmpfile.Name(), []byte(altYamlFileConfig.content), 0644)
+				err = os.WriteFile(tmpfile.Name(), []byte(tt.tempFileConfigNextWrite), 0644)
 				assert.NoError(t, err)
 				time.Sleep(time.Duration(tt.syncInterval+1) * time.Second)
-				assert.Equal(t, 1, len(fileMapper.pairs))
+				assert.Equal(t, tt.expectedPairCountAfterWrite, len(fileMapper.pairs))
 			} else {
 				assert.Nil(t, fileMapper.stop)
 			}

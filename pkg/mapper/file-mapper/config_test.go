@@ -9,8 +9,9 @@ import (
 
 var (
 	fakeConfigEmptyPath = FileMapperConfig{
-		Name: "fake",
-		Path: "",
+		Name:         "fake",
+		Path:         "",
+		SyncInterval: -1,
 	}
 )
 

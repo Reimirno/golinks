@@ -10,6 +10,7 @@ var _ mapper.Mapper = (*FileMapper)(nil)
 type FileMapper struct {
 	name  string
 	pairs types.PathUrlPairMap
+	stop  func()
 }
 
 func (f *FileMapper) GetType() string {
@@ -21,6 +22,9 @@ func (f *FileMapper) GetName() string {
 }
 
 func (f *FileMapper) Teardown() error {
+	if f.stop != nil {
+		f.stop()
+	}
 	return nil
 }
 

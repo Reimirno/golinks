@@ -1,8 +1,10 @@
 package file_mapper
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/reimirno/golinks/pkg/logging"
 	"github.com/reimirno/golinks/pkg/mapper"
 )
 
@@ -32,6 +34,13 @@ func (f *FileMapperConfig) GetMapper() (mapper.Mapper, error) {
 		return nil, err
 	}
 
+	logger := logging.NewLogger(fmt.Sprintf("file-mapper-%s", f.Name))
+	mm := &FileMapper{
+		name:   f.Name,
+		pairs:  pairs.ToMap(),
+		logger: logger,
+	}
+
 	// start a ticker that syncs the file every f.SyncInterval seconds
 	var stop func()
 	if f.SyncInterval > 0 {
@@ -42,6 +51,12 @@ func (f *FileMapperConfig) GetMapper() (mapper.Mapper, error) {
 				select {
 				case <-ticker.C:
 					pairs, err = parseFile(f.Path)
+					if err != nil {
+						mm.logger.Errorf("Failed to hot reload file %s: %v", f.Path, err)
+					} else {
+						mm.logger.Infof("Hot reloaded file %s", f.Path)
+						mm.pairs = pairs.ToMap()
+					}
 				case <-done:
 					return
 				}
@@ -52,12 +67,8 @@ func (f *FileMapperConfig) GetMapper() (mapper.Mapper, error) {
 			done <- true
 		}
 	}
+	mm.stop = stop
 
-	mm := &FileMapper{
-		name:  f.Name,
-		pairs: pairs.ToMap(),
-		stop:  stop,
-	}
 	for _, pair := range mm.pairs {
 		mapper.Sanitize(mm, pair)
 	}

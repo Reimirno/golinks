@@ -3,6 +3,7 @@ package file_mapper
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -68,6 +69,7 @@ func TestFileMapperConfig_GetMapper(t *testing.T) {
 		name           string
 		tempFileConfig *tempFileConfig
 		want           *FileMapper
+		syncInterval   int
 		expectedError  bool
 	}{
 		{
@@ -91,6 +93,15 @@ func TestFileMapperConfig_GetMapper(t *testing.T) {
 			tempFileConfig: malformedYamlFileConfig,
 			expectedError:  true,
 		},
+		{
+			name:           "test config with sync interval",
+			tempFileConfig: yamlFileConfig,
+			syncInterval:   1,
+			want: &FileMapper{
+				name:  yamlFileConfig.name,
+				pairs: pairList.ToMap(),
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -101,8 +112,9 @@ func TestFileMapperConfig_GetMapper(t *testing.T) {
 			}
 			defer os.Remove(tmpfile.Name())
 			mapperConfig := FileMapperConfig{
-				Name: tt.tempFileConfig.name,
-				Path: tmpfile.Name(),
+				Name:         tt.tempFileConfig.name,
+				Path:         tmpfile.Name(),
+				SyncInterval: tt.syncInterval,
 			}
 
 			got, err := mapperConfig.GetMapper()
@@ -116,6 +128,17 @@ func TestFileMapperConfig_GetMapper(t *testing.T) {
 			assert.True(t, ok, "Expected *FileMapper, got %T", got)
 			assert.Equal(t, tt.want.name, fileMapper.name)
 			assert.True(t, tt.want.pairs.Equals(&fileMapper.pairs), "Expected %v, got %v", tt.want.pairs, fileMapper.pairs)
+			if tt.syncInterval > 0 {
+				assert.NotNil(t, fileMapper.stop)
+				err = os.WriteFile(tmpfile.Name(), []byte(altYamlFileConfig.content), 0644)
+				assert.NoError(t, err)
+				time.Sleep(time.Duration(tt.syncInterval+1) * time.Second)
+				assert.Equal(t, 1, len(fileMapper.pairs))
+			} else {
+				assert.Nil(t, fileMapper.stop)
+			}
+
+			assert.NoError(t, fileMapper.Teardown())
 		})
 	}
 }

@@ -3,14 +3,16 @@ package file_mapper
 import (
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
+	"go.uber.org/zap"
 )
 
 var _ mapper.Mapper = (*FileMapper)(nil)
 
 type FileMapper struct {
-	name  string
-	pairs types.PathUrlPairMap
-	stop  func()
+	logger *zap.SugaredLogger
+	name   string
+	pairs  types.PathUrlPairMap
+	stop   func()
 }
 
 func (f *FileMapper) GetType() string {

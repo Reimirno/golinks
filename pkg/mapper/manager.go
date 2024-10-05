@@ -9,14 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// func Sanitize(m Mapper, pair *types.PathUrlPair) {
-// 	pair.Mapper = m.GetName()
-// 	pair.Path = strings.Trim(pair.Path, "/")
-// 	if m.Readonly() {
-// 		pair.UseCount = 0
-// 	}
-// }
-
 type MapperManager struct {
 	mappers   []types.Mapper
 	persistor types.Mapper

@@ -12,6 +12,7 @@ import (
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/version"
 	"github.com/reimirno/golinks/svr/crud"
+	"github.com/reimirno/golinks/svr/crud_http"
 	"github.com/reimirno/golinks/svr/redirector"
 	"go.uber.org/zap"
 )
@@ -66,11 +67,17 @@ func main() {
 		log.Fatalf("Failed to create grpc server: %v", err)
 	}
 
-	svrErrChan := make(chan error, 2)
+	crudHttpServer, err := crud_http.NewServer(mapperManager, cfg.Server.Port.CrudHttp)
+	if err != nil {
+		log.Fatalf("Failed to create crud http server: %v", err)
+	}
+
+	svrErrChan := make(chan error, 3)
 	sigTermChan := make(chan os.Signal, 1)
 
 	redirectorServer.Start(svrErrChan)
 	crudServer.Start(svrErrChan)
+	crudHttpServer.Start(svrErrChan)
 
 	signal.Notify(sigTermChan, os.Interrupt, syscall.SIGTERM)
 
@@ -79,6 +86,7 @@ func main() {
 		logger.Infof("Received shutdown signal, shutting down...")
 		redirectorServer.Stop()
 		crudServer.Stop()
+		crudHttpServer.Stop()
 		mapperManager.Teardown()
 		os.Exit(0)
 	case err = <-svrErrChan:

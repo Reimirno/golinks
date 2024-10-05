@@ -23,6 +23,7 @@ type serverConfig struct {
 	Port struct {
 		Redirector string `mapstructure:"redirector"`
 		Crud       string `mapstructure:"crud"`
+		CrudHttp   string `mapstructure:"crud_http"`
 	} `mapstructure:"port"`
 	Debug bool `mapstructure:"debug"`
 }
@@ -39,6 +40,7 @@ func NewConfig(configFile string) (*config, error) {
 	v.SetConfigFile(configFile)
 	v.SetDefault("Server.Port.Redirector", "8080")
 	v.SetDefault("Server.Port.Crud", "8081")
+	v.SetDefault("Server.Port.CrudHttp", "8082")
 	v.SetDefault("Server.Debug", false)
 
 	if err := v.ReadInConfig(); err != nil {

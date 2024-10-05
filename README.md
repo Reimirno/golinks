@@ -77,6 +77,19 @@ The CRUD operations are exposed as a gRPC service. You can use the `grpcurl` too
 grpcurl -plaintext -d '{"path": "gh"}' localhost:8081 pb.Golinks/GetUrl
 ```
 
+## CRUD HTTP service
+
+The CRUD operations are also exposed as a HTTP service. You can use the `curl` tool to interact with the service.
+
+```bash
+curl -v http://localhost:8082/go
+curl -v http://localhost:8082/go/gh
+curl -X PUT -v localhost:8082/go \
+     -H "Content-Type: application/json" \
+     -d '{"path":"prom","url":"https://prometheus.io"}'
+curl -X DELETE -v http://localhost:8082/go/prom
+```
+
 This is intended to be interacted with by a CLI tool.
 
 ## Developing

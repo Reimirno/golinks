@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 const (
@@ -12,7 +12,7 @@ const (
 	urlMapBucketName     = "urlMap"
 )
 
-var _ mapper.MapperConfigurer = (*BoltMapperConfig)(nil)
+var _ types.MapperConfigurer = (*BoltMapperConfig)(nil)
 
 type BoltMapperConfig struct {
 	Name    string `mapstructure:"name"`
@@ -32,7 +32,7 @@ func (b *BoltMapperConfig) Singleton() bool {
 	return true
 }
 
-func (b *BoltMapperConfig) GetMapper() (mapper.Mapper, error) {
+func (b *BoltMapperConfig) GetMapper() (types.Mapper, error) {
 	var err error
 	var db *bolt.DB
 	db, err = bolt.Open(b.Path, 0600, &bolt.Options{Timeout: time.Duration(b.Timeout) * time.Second})

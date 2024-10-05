@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var _ mapper.Mapper = (*FileMapper)(nil)
+var _ types.Mapper = (*FileMapper)(nil)
 
 type FileMapper struct {
 	logger *zap.SugaredLogger

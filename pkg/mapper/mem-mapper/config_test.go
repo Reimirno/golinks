@@ -3,6 +3,7 @@ package mem_mapper
 import (
 	"testing"
 
+	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -116,7 +117,11 @@ func TestMemMapperConfig_GetMapper(t *testing.T) {
 			memMapper, ok := got.(*MemMapper)
 			assert.True(t, ok, "Expected *MemMapper, got %T", got)
 			assert.Equal(t, tt.want.name, memMapper.name)
-			assert.True(t, tt.want.pairs.Equals(&memMapper.pairs), "Expected %v, got %v", tt.want.pairs, memMapper.pairs)
+			// make a clone and sanitize before comparison
+			// clone is needed because sanitizer modifies the map, which is reused across tests
+			wantClone := tt.want.pairs.Clone()
+			sanitizer.SanitizeInputMap(memMapper, wantClone)
+			assert.True(t, wantClone.Equals(&memMapper.pairs), "Expected %v, got %v", wantClone, memMapper.pairs)
 			assert.NoError(t, memMapper.Teardown())
 		})
 	}

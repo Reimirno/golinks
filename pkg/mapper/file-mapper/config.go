@@ -5,14 +5,15 @@ import (
 	"time"
 
 	"github.com/reimirno/golinks/pkg/logging"
-	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/sanitizer"
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 const (
 	FileMapperConfigType = "FILE"
 )
 
-var _ mapper.MapperConfigurer = (*FileMapperConfig)(nil)
+var _ types.MapperConfigurer = (*FileMapperConfig)(nil)
 
 type FileMapperConfig struct {
 	Name         string `mapstructure:"name"`
@@ -28,7 +29,7 @@ func (f *FileMapperConfig) GetType() string {
 	return FileMapperConfigType
 }
 
-func (f *FileMapperConfig) GetMapper() (mapper.Mapper, error) {
+func (f *FileMapperConfig) GetMapper() (types.Mapper, error) {
 	pairs, err := parseFile(f.Path)
 	if err != nil {
 		return nil, err
@@ -39,6 +40,10 @@ func (f *FileMapperConfig) GetMapper() (mapper.Mapper, error) {
 		name:   f.Name,
 		pairs:  pairs.ToMap(),
 		logger: logger,
+	}
+	err = sanitizer.SanitizeInputMap(mm, &mm.pairs)
+	if err != nil {
+		return nil, err
 	}
 
 	// start a ticker that syncs the file every f.SyncInterval seconds
@@ -56,6 +61,10 @@ func (f *FileMapperConfig) GetMapper() (mapper.Mapper, error) {
 					} else {
 						mm.logger.Infof("Hot reloaded file %s", f.Path)
 						mm.pairs = pairs.ToMap()
+						err = sanitizer.SanitizeInputMap(mm, &mm.pairs)
+						if err != nil {
+							mm.logger.Errorf("Failed to sanitize file %s: %v", f.Path, err)
+						}
 					}
 				case <-done:
 					return
@@ -68,10 +77,6 @@ func (f *FileMapperConfig) GetMapper() (mapper.Mapper, error) {
 		}
 	}
 	mm.stop = stop
-
-	for _, pair := range mm.pairs {
-		mapper.Sanitize(mm, pair)
-	}
 	return mm, nil
 }
 

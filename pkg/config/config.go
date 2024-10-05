@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/reimirno/golinks/pkg/mapper"
 	bolt_mapper "github.com/reimirno/golinks/pkg/mapper/bolt-mapper"
 	file_mapper "github.com/reimirno/golinks/pkg/mapper/file-mapper"
 	mem_mapper "github.com/reimirno/golinks/pkg/mapper/mem-mapper"
 	sql_mapper "github.com/reimirno/golinks/pkg/mapper/sql-mapper"
+	"github.com/reimirno/golinks/pkg/types"
 	"github.com/spf13/viper"
 )
 
@@ -60,7 +60,7 @@ func NewConfig(configFile string) (*config, error) {
 
 type mapperConfigurerWrapper struct {
 	Type             string `mapstructure:"type"`
-	MapperConfigurer mapper.MapperConfigurer
+	MapperConfigurer types.MapperConfigurer
 }
 
 func (w *mapperConfigurerWrapper) DecodeMapstructure(config *mapstructure.DecoderConfig) mapstructure.DecodeHookFunc {

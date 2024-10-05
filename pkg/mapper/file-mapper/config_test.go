@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,6 +66,7 @@ func TestFileMapperConfig_Singleton(t *testing.T) {
 }
 
 func TestFileMapperConfig_GetMapper(t *testing.T) {
+
 	tests := []struct {
 		name                        string
 		tempFileConfig              *tempFileConfig
@@ -142,7 +144,12 @@ func TestFileMapperConfig_GetMapper(t *testing.T) {
 			fileMapper, ok := got.(*FileMapper)
 			assert.True(t, ok, "Expected *FileMapper, got %T", got)
 			assert.Equal(t, tt.want.name, fileMapper.name)
-			assert.True(t, tt.want.pairs.Equals(&fileMapper.pairs), "Expected %v, got %v", tt.want.pairs, fileMapper.pairs)
+			// make a clone and sanitize before comparison
+			// clone is needed because sanitizer modifies the map, which is reused across tests
+			wantClone := tt.want.pairs.Clone()
+			err = sanitizer.SanitizeInputMap(fileMapper, wantClone)
+			assert.NoError(t, err)
+			assert.True(t, wantClone.Equals(&fileMapper.pairs), "Expected %v, got %v", wantClone, fileMapper.pairs)
 			if tt.syncInterval > 0 {
 				assert.NotNil(t, fileMapper.stop)
 				err = os.WriteFile(tmpfile.Name(), []byte(tt.tempFileConfigNextWrite), 0644)

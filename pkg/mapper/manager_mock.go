@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/mock"
 )
@@ -42,7 +43,6 @@ func (m *MockMapper) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, error)
 	if m.IsReadOnly {
 		return nil, ErrOperationNotSupported("put")
 	}
-	Sanitize(m, pair)
 	m.Pairs[pair.Path] = pair
 	return pair, nil
 }
@@ -59,7 +59,7 @@ func (m *MockMapper) Teardown() error {
 	return nil
 }
 
-var _ Mapper = (*MockMapper)(nil)
+var _ types.Mapper = (*MockMapper)(nil)
 
 // MockMapperConfigurer is a mock implementation of the MapperConfigurer interface for testing purposes.
 // It just returns a new MockMapper instance.
@@ -79,14 +79,15 @@ func (m *MockMapperConfigurer) GetName() string {
 	return m.Name
 }
 
-func (m *MockMapperConfigurer) GetMapper() (Mapper, error) {
+func (m *MockMapperConfigurer) GetMapper() (types.Mapper, error) {
 	mapper := new(MockMapper)
 	mapper.Pairs = m.StarterPairs
-	for _, pair := range mapper.Pairs {
-		pair.Mapper = m.Name
+	mapper.Name = m.Name // name must be assigned first before sanitizing
+	err := sanitizer.SanitizeInputMap(mapper, &mapper.Pairs)
+	if err != nil {
+		return nil, err
 	}
 	mapper.IsReadOnly = m.IsReadOnly
-	mapper.Name = m.Name
 	if mapper.Pairs == nil {
 		mapper.Pairs = make(types.PathUrlPairMap)
 	}
@@ -97,10 +98,10 @@ func (m *MockMapperConfigurer) Singleton() bool {
 	return m.IsSingleton
 }
 
-var _ MapperConfigurer = (*MockMapperConfigurer)(nil)
+var _ types.MapperConfigurer = (*MockMapperConfigurer)(nil)
 
-func CloneConfigurers(configurers []*MockMapperConfigurer) []MapperConfigurer {
-	copied := make([]MapperConfigurer, len(configurers))
+func CloneConfigurers(configurers []*MockMapperConfigurer) []types.MapperConfigurer {
+	copied := make([]types.MapperConfigurer, len(configurers))
 	for i, configurer := range configurers {
 		element := &MockMapperConfigurer{
 			Name:         configurer.Name,
@@ -109,7 +110,7 @@ func CloneConfigurers(configurers []*MockMapperConfigurer) []MapperConfigurer {
 			StarterPairs: make(types.PathUrlPairMap),
 		}
 		for path, pair := range configurer.StarterPairs {
-			element.StarterPairs[path] = pair
+			element.StarterPairs[path] = pair.Clone()
 		}
 		copied[i] = element
 	}

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -15,10 +16,27 @@ type PathUrlPair struct {
 	UseCount int    `gorm:"not null;default:0"`
 }
 
+func (p PathUrlPair) String() string {
+	return fmt.Sprintf("'%s' -> '%s'", p.Path, p.Url)
+}
+
+func (p PathUrlPair) GoString() string {
+	return fmt.Sprintf("'%s' -> '%s' (%s, %d)", p.Path, p.Url, p.Mapper, p.UseCount)
+}
+
+func (p *PathUrlPair) Clone() *PathUrlPair {
+	return &PathUrlPair{
+		Path:     p.Path,
+		Url:      p.Url,
+		Mapper:   p.Mapper,
+		UseCount: p.UseCount,
+	}
+}
+
 func (p PathUrlPairMap) ToList() PathUrlPairList {
 	l := make(PathUrlPairList, 0, len(p))
 	for _, pair := range p {
-		l = append(l, pair)
+		l = append(l, pair.Clone())
 	}
 	return l
 }
@@ -26,9 +44,25 @@ func (p PathUrlPairMap) ToList() PathUrlPairList {
 func (p PathUrlPairList) ToMap() PathUrlPairMap {
 	m := make(PathUrlPairMap)
 	for _, pair := range p {
-		m[pair.Path] = pair
+		m[pair.Path] = pair.Clone()
 	}
 	return m
+}
+
+func (p *PathUrlPairList) Clone() *PathUrlPairList {
+	l := make(PathUrlPairList, 0, len(*p))
+	for _, pair := range *p {
+		l = append(l, pair.Clone())
+	}
+	return &l
+}
+
+func (p *PathUrlPairMap) Clone() *PathUrlPairMap {
+	m := make(PathUrlPairMap)
+	for path, pair := range *p {
+		m[path] = pair.Clone()
+	}
+	return &m
 }
 
 func (p *PathUrlPair) Equals(other *PathUrlPair) bool {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,6 +34,7 @@ var (
 		Url:  "https://fake3.com",
 	}
 
+	// When using it, please clone it first
 	mockConfigurer = &mapper.MockMapperConfigurer{
 		Name:        "mock",
 		IsSingleton: false,
@@ -47,14 +49,14 @@ var (
 func TestNewServer(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []mapper.MapperConfigurer
+		configurers   []*mapper.MockMapperConfigurer
 		persistorName string
 		port          string
 		wantErr       bool
 	}{
 		{
 			name:          "happy path",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			port:          "8082",
 			wantErr:       false,
@@ -63,7 +65,7 @@ func TestNewServer(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			mm, err := mapper.NewMapperManager(test.persistorName, mapper.CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			got, err := NewServer(mm, test.port)
 			if test.wantErr {
@@ -84,23 +86,23 @@ func TestServer_GetName(t *testing.T) {
 func TestServer_GetUrl(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []mapper.MapperConfigurer
+		configurers   []*mapper.MockMapperConfigurer
 		persistorName string
 		path          string
-		want          string
+		want          *types.PathUrlPair
 		wantStatus    int
 	}{
 		{
 			name:          "happy path",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			path:          "fk",
-			want:          "https://fake.com",
+			want:          fakePair,
 			wantStatus:    http.StatusOK,
 		},
 		{
 			name:          "path not found",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			path:          "invalid",
 			wantStatus:    http.StatusNotFound,
@@ -109,7 +111,7 @@ func TestServer_GetUrl(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			mm, err := mapper.NewMapperManager(test.persistorName, mapper.CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			server, err := NewServer(mm, "8082")
 			assert.NoError(t, err)
@@ -129,10 +131,13 @@ func TestServer_GetUrl(t *testing.T) {
 				resp := rr.Result()
 				body, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				var got map[string]interface{}
-				err = json.Unmarshal(body, &got)
+				var gotPair types.PathUrlPair
+				err = json.Unmarshal(body, &gotPair)
 				assert.NoError(t, err)
-				assert.Equal(t, test.want, got["url"])
+				canonicalPath, err := sanitizer.CanonicalizePath(gotPair.Path)
+				assert.NoError(t, err)
+				assert.Equal(t, canonicalPath, gotPair.Path)
+				assert.Equal(t, test.want.Url, gotPair.Url)
 			}
 		})
 	}
@@ -141,14 +146,14 @@ func TestServer_GetUrl(t *testing.T) {
 func TestServer_ListUrls(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []mapper.MapperConfigurer
+		configurers   []*mapper.MockMapperConfigurer
 		persistorName string
 		wantStatus    int
 		numPairs      int
 	}{
 		{
 			name:          "happy path",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			wantStatus:    http.StatusOK,
 			numPairs:      2,
@@ -157,7 +162,7 @@ func TestServer_ListUrls(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			mm, err := mapper.NewMapperManager(test.persistorName, mapper.CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			server, err := NewServer(mm, "8082")
 			assert.NoError(t, err)
@@ -177,7 +182,7 @@ func TestServer_ListUrls(t *testing.T) {
 				resp := rr.Result()
 				body, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				var got []map[string]interface{}
+				var got []types.PathUrlPair
 				err = json.Unmarshal(body, &got)
 				assert.NoError(t, err)
 				assert.Equal(t, test.numPairs, len(got))
@@ -237,11 +242,13 @@ func TestServer_PutUrl(t *testing.T) {
 				resp := rr.Result()
 				body, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				var got map[string]interface{}
+				var got types.PathUrlPair
 				err = json.Unmarshal(body, &got)
 				assert.NoError(t, err)
-				assert.Equal(t, test.finalPair.Url, got["url"])
-				assert.Equal(t, test.finalPair.Path, got["path"])
+				canonicalPath, err := sanitizer.CanonicalizePath(test.finalPair.Path)
+				assert.NoError(t, err)
+				assert.Equal(t, canonicalPath, got.Path)
+				assert.Equal(t, test.finalPair.Url, got.Url)
 			}
 		})
 	}

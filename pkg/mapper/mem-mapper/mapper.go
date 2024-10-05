@@ -5,7 +5,7 @@ import (
 	"github.com/reimirno/golinks/pkg/types"
 )
 
-var _ mapper.Mapper = (*MemMapper)(nil)
+var _ types.Mapper = (*MemMapper)(nil)
 
 type MemMapper struct {
 	name  string

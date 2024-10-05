@@ -156,7 +156,7 @@ func TestParseFile(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			assert.True(t, test.expectedPairs.Equals(&pairs))
+			assert.True(t, test.expectedPairs.Equals(&pairs), "Expected %v, got %v", test.expectedPairs, pairs)
 		})
 	}
 }

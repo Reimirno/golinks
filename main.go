@@ -10,6 +10,7 @@ import (
 	"github.com/reimirno/golinks/pkg/config"
 	"github.com/reimirno/golinks/pkg/logging"
 	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/types"
 	"github.com/reimirno/golinks/pkg/version"
 	"github.com/reimirno/golinks/svr/crud"
 	"github.com/reimirno/golinks/svr/crud_http"
@@ -48,7 +49,7 @@ func main() {
 	logger.Info("Application starting...")
 	logger.Info(bld)
 
-	configurators := make([]mapper.MapperConfigurer, len(cfg.Mapper.Mappers))
+	configurators := make([]types.MapperConfigurer, len(cfg.Mapper.Mappers))
 	for i, wrapper := range cfg.Mapper.Mappers {
 		configurators[i] = wrapper.MapperConfigurer
 	}

@@ -25,6 +25,7 @@ var (
 		Url:  "https://fake2.com",
 	}
 
+	// When using it, please clone it first
 	mockConfigurer = &mapper.MockMapperConfigurer{
 		Name:        "mock",
 		IsSingleton: false,
@@ -34,6 +35,7 @@ var (
 			"fk2": fakePair2,
 		},
 	}
+	// When using it, please clone it first
 	mockConfigurerAlt = &mapper.MockMapperConfigurer{
 		Name:        "mockAlt",
 		IsSingleton: false,
@@ -47,14 +49,14 @@ var (
 func TestNewServer(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []mapper.MapperConfigurer
+		configurers   []*mapper.MockMapperConfigurer
 		persistorName string
 		port          string
 		wantErr       bool
 	}{
 		{
 			name:          "happy path",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			port:          "8080",
 			wantErr:       false,
@@ -62,7 +64,7 @@ func TestNewServer(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			mm, err := mapper.NewMapperManager(test.persistorName, mapper.CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			assert.NotNil(t, mm)
 			server, err := NewServer(mm, test.port)
@@ -87,7 +89,7 @@ func TestServer_GetName(t *testing.T) {
 func TestServer_handleRedirect(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []mapper.MapperConfigurer
+		configurers   []*mapper.MockMapperConfigurer
 		persistorName string
 		path          string
 		statusCode    int
@@ -95,7 +97,7 @@ func TestServer_handleRedirect(t *testing.T) {
 	}{
 		{
 			name:          "happy path",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			path:          "fk",
 			redirectUrl:   fakePair.Url,
@@ -103,14 +105,14 @@ func TestServer_handleRedirect(t *testing.T) {
 		},
 		{
 			name:          "not found",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			path:          "invalid",
 			statusCode:    http.StatusNotFound,
 		},
 		{
 			name:          "precedence",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer, mockConfigurerAlt},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer, mockConfigurerAlt},
 			persistorName: "mock",
 			path:          "fk",
 			redirectUrl:   fakePair.Url,
@@ -118,7 +120,7 @@ func TestServer_handleRedirect(t *testing.T) {
 		},
 		{
 			name:          "precedence 2",
-			configurers:   []mapper.MapperConfigurer{mockConfigurerAlt, mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurerAlt, mockConfigurer},
 			persistorName: "mock",
 			path:          "fk",
 			redirectUrl:   fakePairAlt.Url,
@@ -128,7 +130,7 @@ func TestServer_handleRedirect(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			mm, err := mapper.NewMapperManager(test.persistorName, mapper.CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			assert.NotNil(t, mm)
 			server, err := NewServer(mm, "8080")

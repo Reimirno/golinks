@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 
 	"github.com/boltdb/bolt"
-	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
 )
 
-var _ mapper.Mapper = (*BoltMapper)(nil)
+var _ types.Mapper = (*BoltMapper)(nil)
 
 type BoltMapper struct {
 	name string
@@ -65,7 +64,6 @@ func (b *BoltMapper) DeleteUrl(path string) error {
 }
 
 func (b *BoltMapper) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, error) {
-	mapper.Sanitize(b, pair) // always sanitize before saving, so no need to sanitize in get
 	bytes, err := json.Marshal(pair)
 	if err != nil {
 		return nil, err

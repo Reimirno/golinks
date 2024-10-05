@@ -6,6 +6,7 @@ import (
 
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/pb"
+	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -29,6 +30,7 @@ var (
 		Url:  "https://fake3.com",
 	}
 
+	// When using it, please clone it first
 	mockConfigurer = &mapper.MockMapperConfigurer{
 		Name:        "mock",
 		IsSingleton: false,
@@ -43,7 +45,7 @@ var (
 func TestNewServer(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []mapper.MapperConfigurer
+		configurers   []*mapper.MockMapperConfigurer
 		persistorName string
 		port          string
 		debug         bool
@@ -51,7 +53,7 @@ func TestNewServer(t *testing.T) {
 	}{
 		{
 			name:          "happy path",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			port:          "8081",
 			debug:         true,
@@ -61,7 +63,7 @@ func TestNewServer(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			mm, err := mapper.NewMapperManager(test.persistorName, mapper.CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			got, err := NewServer(mm, test.port, test.debug)
 			if test.wantErr {
@@ -97,22 +99,22 @@ func TestServer_GetName(t *testing.T) {
 func TestServer_GetUrl(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []mapper.MapperConfigurer
+		configurers   []*mapper.MockMapperConfigurer
 		persistorName string
 		path          string
-		want          string
+		want          *types.PathUrlPair
 		wantErr       bool
 	}{
 		{
 			name:          "happy path",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			path:          "fk",
-			want:          "https://fake.com",
+			want:          fakePair,
 		},
 		{
 			name:          "path not found",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			path:          "invalid",
 			wantErr:       true,
@@ -121,7 +123,7 @@ func TestServer_GetUrl(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			mm, err := mapper.NewMapperManager(test.persistorName, mapper.CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			server, err := NewServer(mm, "8081", false)
 			assert.NoError(t, err)
@@ -131,7 +133,10 @@ func TestServer_GetUrl(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, test.want, resp.GetUrl())
+				canonicalPath, err := sanitizer.CanonicalizePath(test.want.Path)
+				assert.NoError(t, err)
+				assert.Equal(t, canonicalPath, resp.GetPath())
+				assert.Equal(t, test.want.Url, resp.GetUrl())
 			}
 		})
 	}
@@ -140,14 +145,14 @@ func TestServer_GetUrl(t *testing.T) {
 func TestServer_ListUrls(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []mapper.MapperConfigurer
+		configurers   []*mapper.MockMapperConfigurer
 		persistorName string
 		wantErr       bool
 		numPairs      int
 	}{
 		{
 			name:          "happy path",
-			configurers:   []mapper.MapperConfigurer{mockConfigurer},
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			wantErr:       false,
 			numPairs:      2,
@@ -156,7 +161,7 @@ func TestServer_ListUrls(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mm, err := mapper.NewMapperManager(test.persistorName, test.configurers)
+			mm, err := mapper.NewMapperManager(test.persistorName, mapper.CloneConfigurers(test.configurers))
 			assert.NoError(t, err)
 			server, err := NewServer(mm, "8081", false)
 			assert.NoError(t, err)
@@ -175,7 +180,7 @@ func TestServer_PutUrl(t *testing.T) {
 		persistorName string
 		pair          *types.PathUrlPair
 		wantErr       bool
-		finalPair     *types.PathUrlPair
+		want          *types.PathUrlPair
 	}{
 		{
 			name:          "happy path update",
@@ -183,7 +188,7 @@ func TestServer_PutUrl(t *testing.T) {
 			persistorName: "mock",
 			pair:          fakePairAlt,
 			wantErr:       false,
-			finalPair:     fakePairAlt,
+			want:          fakePairAlt,
 		},
 		{
 			name:          "happy path create",
@@ -191,7 +196,7 @@ func TestServer_PutUrl(t *testing.T) {
 			persistorName: "mock",
 			pair:          fakePair3,
 			wantErr:       false,
-			finalPair:     fakePair3,
+			want:          fakePair3,
 		},
 	}
 
@@ -202,7 +207,7 @@ func TestServer_PutUrl(t *testing.T) {
 			server, err := NewServer(mm, "8081", false)
 			assert.NoError(t, err)
 
-			_, err = server.PutUrl(context.Background(), &pb.PathUrlPair{
+			resp, err := server.PutUrl(context.Background(), &pb.PathUrlPair{
 				Path: test.pair.Path,
 				Url:  test.pair.Url,
 			})
@@ -210,12 +215,18 @@ func TestServer_PutUrl(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+				canonicalPath, err := sanitizer.CanonicalizePath(test.want.Path)
+				assert.NoError(t, err)
+				assert.Equal(t, canonicalPath, resp.GetPath())
+				assert.Equal(t, test.want.Url, resp.GetUrl())
 			}
 
-			resp, err := server.GetUrl(context.Background(), &pb.GetUrlRequest{Path: test.pair.Path})
+			resp, err = server.GetUrl(context.Background(), &pb.GetUrlRequest{Path: test.pair.Path})
 			assert.NoError(t, err)
-			assert.Equal(t, test.finalPair.Url, resp.GetUrl())
-			assert.Equal(t, test.finalPair.Path, resp.GetPath())
+			canonicalPath, err := sanitizer.CanonicalizePath(test.want.Path)
+			assert.NoError(t, err)
+			assert.Equal(t, canonicalPath, resp.GetPath())
+			assert.Equal(t, test.want.Url, resp.GetUrl())
 		})
 	}
 }
@@ -227,7 +238,7 @@ func TestServer_DeleteUrl(t *testing.T) {
 		persistorName string
 		path          string
 		wantErr       bool
-		finalPair     *types.PathUrlPair // final pair you can GET from update
+		want          string
 	}{
 		{
 			name:          "happy path",
@@ -235,7 +246,7 @@ func TestServer_DeleteUrl(t *testing.T) {
 			persistorName: mockConfigurer.Name,
 			path:          "fk",
 			wantErr:       false,
-			finalPair:     nil,
+			want:          "",
 		},
 		{
 			name:          "path not found is fine",
@@ -243,7 +254,7 @@ func TestServer_DeleteUrl(t *testing.T) {
 			persistorName: mockConfigurer.Name,
 			path:          "invalid",
 			wantErr:       false,
-			finalPair:     nil,
+			want:          "",
 		},
 	}
 
@@ -262,10 +273,9 @@ func TestServer_DeleteUrl(t *testing.T) {
 			}
 
 			resp, err := server.GetUrl(context.Background(), &pb.GetUrlRequest{Path: test.path})
-			if test.finalPair != nil {
+			if test.want != "" {
 				assert.NoError(t, err)
-				assert.Equal(t, test.finalPair.Url, resp.GetUrl())
-				assert.Equal(t, test.finalPair.Path, resp.GetPath())
+				assert.Equal(t, test.want, resp.GetUrl())
 			} else {
 				assert.Error(t, err)
 			}

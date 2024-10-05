@@ -3,7 +3,6 @@ package sql_mapper
 import (
 	"fmt"
 
-	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -16,7 +15,7 @@ const (
 	SqlMapperConfigType = "SQL"
 )
 
-var _ mapper.MapperConfigurer = (*SqlMapperConfig)(nil)
+var _ types.MapperConfigurer = (*SqlMapperConfig)(nil)
 
 type SqlMapperConfig struct {
 	Name   string `mapstructure:"name"`
@@ -32,7 +31,7 @@ func (m *SqlMapperConfig) GetType() string {
 	return SqlMapperConfigType
 }
 
-func (m *SqlMapperConfig) GetMapper() (mapper.Mapper, error) {
+func (m *SqlMapperConfig) GetMapper() (types.Mapper, error) {
 	var db *gorm.DB
 	var err error
 	switch m.Driver {

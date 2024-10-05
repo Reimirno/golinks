@@ -3,6 +3,7 @@ package mapper
 import (
 	"testing"
 
+	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,49 +66,49 @@ var (
 func TestNewMapperManager(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []MapperConfigurer
+		configurers   []types.MapperConfigurer
 		persistorName string
 		wantErr       bool
 	}{
 		{
 			name:          "happy path",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []types.MapperConfigurer{mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			wantErr:       false,
 		},
 		{
 			name:          "invalid persistor should fail",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []types.MapperConfigurer{mockConfigurer},
 			persistorName: "invalid",
 			wantErr:       true,
 		},
 		{
 			name:          "nil persistor should be fine",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []types.MapperConfigurer{mockConfigurer},
 			persistorName: "",
 			wantErr:       false,
 		},
 		{
 			name:          "duplicate non-singleton should pass",
-			configurers:   []MapperConfigurer{mockConfigurer, mockConfigurerReadonly},
+			configurers:   []types.MapperConfigurer{mockConfigurer, mockConfigurerReadonly},
 			persistorName: mockConfigurer.Name,
 			wantErr:       false,
 		},
 		{
 			name:          "duplicate name should fail",
-			configurers:   []MapperConfigurer{mockConfigurer, mockConfigurer},
+			configurers:   []types.MapperConfigurer{mockConfigurer, mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			wantErr:       true,
 		},
 		{
 			name:          "duplicate singleton should fail",
-			configurers:   []MapperConfigurer{mockConfigurer, mockConfigurerSingleton},
+			configurers:   []types.MapperConfigurer{mockConfigurer, mockConfigurerSingleton},
 			persistorName: mockConfigurer.Name,
 			wantErr:       true,
 		},
 		{
 			name:          "no mappers should fail",
-			configurers:   []MapperConfigurer{},
+			configurers:   []types.MapperConfigurer{},
 			persistorName: "",
 			wantErr:       true,
 		},
@@ -135,22 +136,22 @@ func TestNewMapperManager(t *testing.T) {
 func TestMapperManager_ListUrls(t *testing.T) {
 	tests := []struct {
 		name        string
-		configurers []MapperConfigurer
+		configurers []types.MapperConfigurer
 		numUrls     int
 	}{
 		{
 			name:        "happy path",
-			configurers: []MapperConfigurer{mockConfigurer},
+			configurers: []types.MapperConfigurer{mockConfigurer},
 			numUrls:     len(mockConfigurer.StarterPairs),
 		},
 		{
 			name:        "multiple mappers",
-			configurers: []MapperConfigurer{mockConfigurer, mockConfigurer2},
+			configurers: []types.MapperConfigurer{mockConfigurer, mockConfigurer2},
 			numUrls:     len(mockConfigurer.StarterPairs) + len(mockConfigurer2.StarterPairs),
 		},
 		{
 			name:        "multiple mappers with overlap",
-			configurers: []MapperConfigurer{mockConfigurer, mockConfigurerAlt},
+			configurers: []types.MapperConfigurer{mockConfigurer, mockConfigurerAlt},
 			numUrls:     len(mockConfigurer.StarterPairs),
 		},
 	}
@@ -169,7 +170,7 @@ func TestMapperManager_ListUrls(t *testing.T) {
 func TestMapperManager_GetUrl(t *testing.T) {
 	tests := []struct {
 		name          string
-		configurers   []MapperConfigurer
+		configurers   []types.MapperConfigurer
 		persistorName string
 		path          string
 		url           *types.PathUrlPair
@@ -177,14 +178,14 @@ func TestMapperManager_GetUrl(t *testing.T) {
 	}{
 		{
 			name:          "happy path",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []types.MapperConfigurer{mockConfigurer},
 			persistorName: mockConfigurer.Name,
-			path:          "fk",
+			path:          "/fk",
 			url:           fakePair,
 		},
 		{
 			name:          "path not found",
-			configurers:   []MapperConfigurer{mockConfigurer},
+			configurers:   []types.MapperConfigurer{mockConfigurer},
 			persistorName: mockConfigurer.Name,
 			path:          "invalid",
 			url:           nil,
@@ -192,16 +193,16 @@ func TestMapperManager_GetUrl(t *testing.T) {
 		},
 		{
 			name:          "order of configurers is important",
-			configurers:   []MapperConfigurer{mockConfigurerAlt, mockConfigurer},
+			configurers:   []types.MapperConfigurer{mockConfigurerAlt, mockConfigurer},
 			persistorName: mockConfigurer.Name,
-			path:          "fk",
+			path:          "/fk",
 			url:           fakePairAlt,
 		},
 		{
 			name:          "readonly mapper works",
-			configurers:   []MapperConfigurer{mockConfigurerReadonly},
+			configurers:   []types.MapperConfigurer{mockConfigurerReadonly},
 			persistorName: "",
-			path:          "fk",
+			path:          "/fk",
 			url:           nil,
 			wantErr:       false,
 		},
@@ -218,6 +219,8 @@ func TestMapperManager_GetUrl(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				if test.url != nil {
+					err = sanitizer.SanitizeInput(mm.getPersistor(), test.url)
+					assert.NoError(t, err)
 					assert.True(t, test.url.Equals(pair), "Expected %v, got %v", test.url, pair)
 				} else {
 					assert.Nil(t, pair)
@@ -278,6 +281,9 @@ func TestMapperManager_PutUrl(t *testing.T) {
 				assert.NoError(t, err)
 				assert.True(t, test.pair.Equals(pair), "Expected %v, got %v", test.pair, pair)
 				pair, err := mm.GetUrl(test.pair.Path, false)
+				assert.NoError(t, err)
+				// sanitize test.finalPair before comparing
+				err = sanitizer.SanitizeInput(mm.getPersistor(), test.finalPair)
 				assert.NoError(t, err)
 				assert.True(t, test.finalPair.Equals(pair), "Expected %v, got %v", test.finalPair, pair)
 			}
@@ -346,19 +352,19 @@ func TestMapperManager_DeleteUrl(t *testing.T) {
 func TestMapperManager_Teardown(t *testing.T) {
 	tests := []struct {
 		name        string
-		configurers []MapperConfigurer
+		configurers []types.MapperConfigurer
 	}{
 		{
 			name:        "happy path",
-			configurers: []MapperConfigurer{mockConfigurer},
+			configurers: []types.MapperConfigurer{mockConfigurer},
 		},
 		{
 			name:        "multiple mappers",
-			configurers: []MapperConfigurer{mockConfigurer, mockConfigurer2},
+			configurers: []types.MapperConfigurer{mockConfigurer, mockConfigurer2},
 		},
 		{
 			name:        "multiple mappers with overlap",
-			configurers: []MapperConfigurer{mockConfigurer, mockConfigurerAlt},
+			configurers: []types.MapperConfigurer{mockConfigurer, mockConfigurerAlt},
 		},
 	}
 

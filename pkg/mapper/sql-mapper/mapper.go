@@ -1,7 +1,6 @@
 package sql_mapper
 
 import (
-	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
 	"gorm.io/gorm"
 )
@@ -11,7 +10,7 @@ type SqlMapper struct {
 	db   *gorm.DB
 }
 
-var _ mapper.Mapper = (*SqlMapper)(nil)
+var _ types.Mapper = (*SqlMapper)(nil)
 
 func (m *SqlMapper) GetName() string {
 	return m.name
@@ -34,7 +33,6 @@ func (m *SqlMapper) GetUrl(path string) (*types.PathUrlPair, error) {
 		}
 		return nil, err
 	}
-	mapper.Sanitize(m, &pair)
 	return &pair, nil
 }
 
@@ -59,9 +57,6 @@ func (m *SqlMapper) ListUrls() (types.PathUrlPairList, error) {
 	err := m.db.Find(&pairs).Error
 	if err != nil {
 		return nil, err
-	}
-	for _, pair := range pairs {
-		mapper.Sanitize(m, pair)
 	}
 	return pairs, nil
 }

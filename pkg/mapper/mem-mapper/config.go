@@ -1,7 +1,7 @@
 package mem_mapper
 
 import (
-	"github.com/reimirno/golinks/pkg/mapper"
+	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
 )
 
@@ -9,7 +9,7 @@ const (
 	MemMapperConfigType = "MEM"
 )
 
-var _ mapper.MapperConfigurer = (*MemMapperConfig)(nil)
+var _ types.MapperConfigurer = (*MemMapperConfig)(nil)
 
 type MemMapperConfig struct {
 	Name  string              `mapstructure:"name"`
@@ -24,7 +24,7 @@ func (m *MemMapperConfig) GetType() string {
 	return MemMapperConfigType
 }
 
-func (m *MemMapperConfig) GetMapper() (mapper.Mapper, error) {
+func (m *MemMapperConfig) GetMapper() (types.Mapper, error) {
 	pairs := make(types.PathUrlPairMap)
 	for _, pair := range m.Pairs {
 		pairs[pair.Path] = &pair
@@ -33,10 +33,10 @@ func (m *MemMapperConfig) GetMapper() (mapper.Mapper, error) {
 		name:  m.Name,
 		pairs: pairs,
 	}
-	for _, pair := range pairs {
-		mapper.Sanitize(mm, pair)
+	err := sanitizer.SanitizeInputMap(mm, &mm.pairs)
+	if err != nil {
+		return nil, err
 	}
-	mm.pairs = pairs
 	return mm, nil
 }
 

@@ -11,10 +11,11 @@ This services can be used for personal purposes (e.g. `go/me` opens your website
 
 ## Components
 
-This repository consists of two main services:
+This repository consists of 3 main services:
 
 - `redirector` - a simple HTTP server that redirects `go/<keyword>` requests to the corresponding URL.
 - `crud` - a gRPC service that provides CRUD operations for the keyword-to-URL mappings.
+- `crud_http` - an HTTP service that provides CRUD operations for the keyword-to-URL mappings.
 
 The mapping can be stored in various ways including local files or in database. This behavior is configurable via a configuration file.
 
@@ -68,6 +69,10 @@ If there are multiple mappers configured, CRUD operations would be resolved by t
     - insert: the mapper designated as `persistor` would be used.
     - update: the key-value pair would be updated in all mappers that support the GET operation.
 - DELETE: the key-value pair would be deleted from the mapper that returns a match by the GET operation rule.
+
+## Sanitization
+
+// TODO
 
 ## CRUD gRPC service
 

@@ -1,0 +1,18 @@
+{
+    "recommendations": [
+        "golang.go",
+        "neonxp.gotools",
+        "premparihar.gotestexplorer",
+        "github.vscode-github-actions",
+        "aaravb.chrome-extension-developer-tools",
+        "ms-vscode.makefile-tools",
+        "svelte.svelte-vscode",
+        "yzhang.markdown-all-in-one",
+        "shd101wyy.markdown-preview-enhanced",
+        "redhat.vscode-yaml",
+        "zainchen.json",
+        "quicktype.quicktype",
+        "zxh404.vscode-proto3",
+        "wayou.vscode-todo-highlight",
+    ]
+}

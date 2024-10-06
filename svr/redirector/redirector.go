@@ -37,9 +37,12 @@ func (s *Server) Start(errChan chan<- error) {
 
 func (s *Server) Stop() error {
 	s.logger.Infof("Shutting down service %s...", s.GetName())
-	s.server.Shutdown(context.Background())
+	err := s.server.Shutdown(context.Background())
+	if err != nil {
+		s.logger.Errorf("Error shutting down service %s: %v", s.GetName(), err)
+	}
 	s.logger.Infof("Service %s shutdown complete", s.GetName())
-	return nil
+	return err
 }
 
 func NewServer(m *mapper.MapperManager, port string) (*Server, error) {

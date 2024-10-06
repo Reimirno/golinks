@@ -121,7 +121,8 @@ func TestMemMapperConfig_GetMapper(t *testing.T) {
 			// make a clone and sanitize before comparison
 			// clone is needed because sanitizer modifies the map, which is reused across tests
 			wantClone := tt.want.pairs.Clone()
-			sanitizer.SanitizeInputMap(memMapper, wantClone)
+			err = sanitizer.SanitizeInputMap(memMapper, wantClone)
+			assert.NoError(t, err)
 			assert.True(t, wantClone.Equals(&memMapper.pairs), "Expected %v, got %v", wantClone, memMapper.pairs)
 			assert.NoError(t, memMapper.Teardown())
 		})

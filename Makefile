@@ -52,3 +52,6 @@ clean:
 
 lint:
 	golangci-lint run --config .golangci.yaml --sort-results
+
+test-chrome:
+	cd browser/chrome && npm test

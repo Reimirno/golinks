@@ -2,6 +2,10 @@
     "go.useLanguageServer": true,
     "go.formatTool": "gofumpt",
     "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--config=${workspaceFolder}/.golangci.yaml",
+        "--sort-results"
+    ],
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.organizeImports": "always"
@@ -9,5 +13,11 @@
     "gopls": {
         "local": "github.com/reimirno/golinks",
         "formatting.gofumpt": true,
+        "ui.completion.usePlaceholders": true,
+        "staticcheck": true,
+        "analyses": {
+            "shadow": true,
+            "unusedvariable": true
+        }
     }
 }

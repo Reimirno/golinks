@@ -49,3 +49,6 @@ cover:
 
 clean:
 	rm -rf $(OUT_DIR) $(PROTO_DIR)/*.pb.go $(COVERAGE_DIR)
+
+lint:
+	golangci-lint run --config .golangci.yaml --sort-results

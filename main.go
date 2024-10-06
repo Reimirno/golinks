@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go.uber.org/zap"
+
 	"github.com/reimirno/golinks/pkg/config"
 	"github.com/reimirno/golinks/pkg/logging"
 	"github.com/reimirno/golinks/pkg/mapper"
@@ -15,7 +17,6 @@ import (
 	"github.com/reimirno/golinks/svr/crud"
 	"github.com/reimirno/golinks/svr/crud_http"
 	"github.com/reimirno/golinks/svr/redirector"
-	"go.uber.org/zap"
 )
 
 var (
@@ -36,7 +37,7 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	if err := logging.Initialize(cfg.Server.Debug); err != nil {
+	if err = logging.Initialize(cfg.Server.Debug); err != nil {
 		log.Fatalf("Failed to initialize logging: %v", err)
 	}
 	logger = logging.NewLogger("main")
@@ -85,10 +86,22 @@ func main() {
 	select {
 	case <-sigTermChan:
 		logger.Infof("Received shutdown signal, shutting down...")
-		redirectorServer.Stop()
-		crudServer.Stop()
-		crudHttpServer.Stop()
-		mapperManager.Teardown()
+		err = redirectorServer.Stop()
+		if err != nil {
+			logger.Errorf("Error stopping redirector server: %v", err)
+		}
+		err = crudServer.Stop()
+		if err != nil {
+			logger.Errorf("Error stopping crud server: %v", err)
+		}
+		err = crudHttpServer.Stop()
+		if err != nil {
+			logger.Errorf("Error stopping crud http server: %v", err)
+		}
+		err = mapperManager.Teardown()
+		if err != nil {
+			logger.Errorf("Error tearing down mapper manager: %v", err)
+		}
 		os.Exit(0)
 	case err = <-svrErrChan:
 		if err != nil {

@@ -148,6 +148,7 @@ func TestServer_ListUrls(t *testing.T) {
 		persistorName string
 		wantErr       bool
 		numPairs      int
+		pagination    *types.Pagination
 	}{
 		{
 			name:          "happy path",
@@ -164,11 +165,8 @@ func TestServer_ListUrls(t *testing.T) {
 			assert.NoError(t, err)
 			server, err := NewServer(mm, "8081", false)
 			assert.NoError(t, err)
-
-			resp, err := server.ListUrls(context.Background(), &pb.ListUrlsRequest{
-				Offset: 0,
-				Limit:  100,
-			})
+			resp, err := server.ListUrls(context.Background(),
+				&pb.ListUrlsRequest{Pagination: getPaginationProto(test.pagination)})
 			assert.NoError(t, err)
 			assert.Equal(t, test.numPairs, len(resp.GetPairs()))
 		})

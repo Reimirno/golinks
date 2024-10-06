@@ -29,10 +29,14 @@ message DeleteUrlRequest {
 }
 
 message ListUrlsRequest {
-    int32 offset = 1;
-    int32 limit = 2;
+    Pagination pagination = 1;
 }
 
 message ListUrlsResponse {
     repeated PathUrlPair pairs = 1;
+}
+
+message Pagination {
+    int32 offset = 1;
+    int32 limit = 2;
 }

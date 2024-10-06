@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -150,13 +151,48 @@ func TestServer_ListUrls(t *testing.T) {
 		persistorName string
 		wantStatus    int
 		numPairs      int
+		offset        string
+		limit         string
 	}{
 		{
-			name:          "happy path",
+			name:          "happy path with default pagination",
 			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
 			persistorName: "mock",
 			wantStatus:    http.StatusOK,
 			numPairs:      2,
+		},
+		{
+			name:          "happy path with offset",
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			wantStatus:    http.StatusOK,
+			numPairs:      1,
+			offset:        "1",
+		},
+		{
+			name:          "happy path with limit",
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			wantStatus:    http.StatusOK,
+			numPairs:      1,
+			limit:         "1",
+		},
+		{
+			name:          "happy path with offset and limit",
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			wantStatus:    http.StatusOK,
+			numPairs:      1,
+			offset:        "1",
+			limit:         "1",
+		},
+		{
+			name:          "offset exceeds list length",
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			wantStatus:    http.StatusOK,
+			numPairs:      0,
+			offset:        "10",
 		},
 	}
 
@@ -167,9 +203,20 @@ func TestServer_ListUrls(t *testing.T) {
 			server, err := NewServer(mm, "8082")
 			assert.NoError(t, err)
 
-			req, err := http.NewRequest("GET", "/go/", nil)
+			reqUrl := url.URL{
+				Path: "/go/",
+			}
+			query := reqUrl.Query()
+			if test.offset != "" {
+				query.Add("offset", test.offset)
+			}
+			if test.limit != "" {
+				query.Add("limit", test.limit)
+			}
+			reqUrl.RawQuery = query.Encode()
+			urlStr := reqUrl.String()
+			req, err := http.NewRequest("GET", urlStr, nil)
 			assert.NoError(t, err)
-			assert.NotNil(t, req)
 
 			r := mux.NewRouter()
 			r.HandleFunc("/go/", server.handleListUrls).Methods("GET")

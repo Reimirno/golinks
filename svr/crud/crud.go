@@ -9,6 +9,7 @@ import (
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/pb"
 	"github.com/reimirno/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/utils"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -106,11 +107,17 @@ func (s *Server) DeleteUrl(ctx context.Context, req *pb.DeleteUrlRequest) (*empt
 }
 
 func (s *Server) ListUrls(ctx context.Context, req *pb.ListUrlsRequest) (*pb.ListUrlsResponse, error) {
-	pagination := types.Pagination{
-		Offset: int(req.Offset),
-		Limit:  int(req.Limit),
+	pagination := getPaginationStruct(req.Pagination)
+	if pagination == nil {
+		pagination = &utils.DefaultPagination
 	}
-	pairs, err := s.manager.ListUrls(pagination)
+	if pagination.Offset == 0 {
+		pagination.Offset = utils.DefaultPagination.Offset
+	}
+	if pagination.Limit == 0 {
+		pagination.Limit = utils.DefaultPagination.Limit
+	}
+	pairs, err := s.manager.ListUrls(*pagination)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list urls: %v", err)
 	}

@@ -22,3 +22,23 @@ func getStruct(p *pb.PathUrlPair) *types.PathUrlPair {
 		UseCount: int(p.UseCount),
 	}
 }
+
+func getPaginationProto(p *types.Pagination) *pb.Pagination {
+	if p == nil {
+		return nil
+	}
+	return &pb.Pagination{
+		Offset: int32(p.Offset),
+		Limit:  int32(p.Limit),
+	}
+}
+
+func getPaginationStruct(p *pb.Pagination) *types.Pagination {
+	if p == nil {
+		return nil
+	}
+	return &types.Pagination{
+		Offset: int(p.Offset),
+		Limit:  int(p.Limit),
+	}
+}

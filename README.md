@@ -11,11 +11,14 @@ This services can be used for personal purposes (e.g. `go/me` opens your website
 
 ## Components
 
-This repository consists of 3 main services:
+This repository consists of a few services:
 
-- `redirector` - a simple HTTP server that redirects `go/<keyword>` requests to the corresponding URL.
+Server-side services:
+- `redirector` - a simple HTTP server that redirects keyword requests to the corresponding URL.
 - `crud` - a gRPC service that provides CRUD operations for the keyword-to-URL mappings.
 - `crud_http` - an HTTP service that provides CRUD operations for the keyword-to-URL mappings.
+- `web` - a web app that allows easier management of the mappings and the server. (WIP)
+- `browser/chrome` - a Chrome extension that allows the user to configure the Golinks server URL.
 
 The mapping can be stored in various ways including local files or in database. This behavior is configurable via a configuration file.
 
@@ -29,7 +32,12 @@ go run .
 
 Then, go to your browser and try open `localhost:8080/gh`. It should redirect you to `https://github.com`.
 
-(If you would like to just type in `go/gh` and have it work, you need to add `127.0.0.1 go` to your host file, which usually is `/etc/hosts` on Linux/MacOS and `C:\Windows\System32\drivers\etc\hosts` on Windows. This feature can also be supported by a browser extension without making the end user to modify their host file - we will develop the browser extension in the future.)
+## Chrome Extension
+If you would like to just type in `go/gh` (instead of `localhost:8080/go/gh`) and make it work, you need to add `127.0.0.1 go` to your host file, which usually is `/etc/hosts` on Linux/MacOS and `C:\Windows\System32\drivers\etc\hosts` on Windows. 
+
+If you are using Chrome, you can also install the extension that is included in `browser/chrome/src` directory. See [How to load unpacked or unsafe extensions](https://knowledge.workspace.google.com/kb/load-unpacked-extensions-000005962) for guidance. Basically, go to `chrome://extensions`, enable "Developer mode" (using top-right corner switch), click "Load unpacked" and select the `browser/chrome/src` directory.
+
+Then, in extension configuration page, you can specify the server URL where you are hosting the `redirector` service, which by default is `http://localhost:8080`.
 
 ## Configuration File
 
@@ -72,7 +80,7 @@ If there are multiple mappers configured, CRUD operations would be resolved by t
 
 ## Sanitization
 
-// TODO
+See code comments in `pkg/sanitizer` for details.
 
 ## CRUD gRPC service
 
@@ -102,7 +110,6 @@ This is intended to be interacted with by a CLI tool.
 See `Makefile` for commands to run tests, build and clean the project.
 
 ## Future work
-- Browser extension as mentioned above
 - Web UI/CLI for easier management of the mappings.
     - grpc server does not work well with web. We shall either use grpc-web, connect-web or expose a regular REST API.
 - Deployment scheme

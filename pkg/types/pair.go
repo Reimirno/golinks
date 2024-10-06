@@ -20,10 +20,6 @@ func (p PathUrlPair) String() string {
 	return fmt.Sprintf("'%s' -> '%s'", p.Path, p.Url)
 }
 
-func (p PathUrlPair) GoString() string {
-	return fmt.Sprintf("'%s' -> '%s' (%s, %d)", p.Path, p.Url, p.Mapper, p.UseCount)
-}
-
 func (p *PathUrlPair) Clone() *PathUrlPair {
 	return &PathUrlPair{
 		Path:     p.Path,
@@ -118,10 +114,4 @@ func (l *PathUrlPairList) Equals(other *PathUrlPairList) bool {
 		}
 	}
 	return true
-}
-
-type Service interface {
-	Start(errChan chan<- error)
-	Stop() error
-	GetName() string
 }

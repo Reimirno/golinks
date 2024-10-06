@@ -92,13 +92,13 @@ func (m *MapperManager) GetUrl(path string, incrementCounter bool) (*types.PathU
 	return nil, nil
 }
 
-func (m *MapperManager) ListUrls() (types.PathUrlPairList, error) {
+func (m *MapperManager) ListUrls(pagination types.Pagination) (types.PathUrlPairList, error) {
 	m.logger.Debugf("Listing urls")
 	// mapper order is important here
 	// mappers in the front takes precedence over mappers in the back
 	var urlMap = make(types.PathUrlPairMap)
 	for _, mapper := range m.mappers {
-		urls, err := mapper.ListUrls()
+		urls, err := mapper.ListUrls(pagination)
 		if err != nil {
 			return nil, err
 		}

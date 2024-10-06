@@ -69,3 +69,24 @@ func (b *BoltMapper) foreach(bucketName string, action func(key string, value []
 	})
 	return err
 }
+
+func (b *BoltMapper) forsome(bucketName string, action func(key string, value []byte) error, limit int) error {
+	err := b.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucketName))
+		if b == nil {
+			return fmt.Errorf("bucket not found: %s", bucketName)
+		}
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			if err := action(string(k), v); err != nil {
+				return err
+			}
+			limit--
+			if limit == 0 {
+				break
+			}
+		}
+		return nil
+	})
+	return err
+}

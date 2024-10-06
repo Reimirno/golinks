@@ -105,8 +105,12 @@ func (s *Server) DeleteUrl(ctx context.Context, req *pb.DeleteUrlRequest) (*empt
 	return &emptypb.Empty{}, nil
 }
 
-func (s *Server) ListUrls(ctx context.Context, req *emptypb.Empty) (*pb.ListUrlsResponse, error) {
-	pairs, err := s.manager.ListUrls()
+func (s *Server) ListUrls(ctx context.Context, req *pb.ListUrlsRequest) (*pb.ListUrlsResponse, error) {
+	pagination := types.Pagination{
+		Offset: int(req.Offset),
+		Limit:  int(req.Limit),
+	}
+	pairs, err := s.manager.ListUrls(pagination)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list urls: %v", err)
 	}

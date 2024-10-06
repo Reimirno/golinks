@@ -9,7 +9,6 @@ import (
 	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
@@ -166,7 +165,10 @@ func TestServer_ListUrls(t *testing.T) {
 			server, err := NewServer(mm, "8081", false)
 			assert.NoError(t, err)
 
-			resp, err := server.ListUrls(context.Background(), &emptypb.Empty{})
+			resp, err := server.ListUrls(context.Background(), &pb.ListUrlsRequest{
+				Offset: 0,
+				Limit:  100,
+			})
 			assert.NoError(t, err)
 			assert.Equal(t, test.numPairs, len(resp.GetPairs()))
 		})

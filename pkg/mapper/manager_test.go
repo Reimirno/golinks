@@ -5,6 +5,7 @@ import (
 
 	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -160,7 +161,7 @@ func TestMapperManager_ListUrls(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			mm, err := NewMapperManager(test.configurers[0].GetName(), test.configurers)
 			assert.NoError(t, err)
-			urls, err := mm.ListUrls()
+			urls, err := mm.ListUrls(utils.DefaultPagination)
 			assert.NoError(t, err)
 			assert.Equal(t, test.numUrls, len(urls))
 		})

@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/utils"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -35,8 +36,8 @@ func (m *MockMapper) GetUrl(path string) (*types.PathUrlPair, error) {
 	return nil, nil
 }
 
-func (m *MockMapper) ListUrls() (types.PathUrlPairList, error) {
-	return m.Pairs.ToList(), nil
+func (m *MockMapper) ListUrls(pagination types.Pagination) (types.PathUrlPairList, error) {
+	return utils.Paginate(m.Pairs.ToList(), pagination), nil
 }
 
 func (m *MockMapper) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, error) {

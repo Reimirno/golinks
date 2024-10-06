@@ -42,17 +42,23 @@ func (b *BoltMapper) GetUrl(path string) (*types.PathUrlPair, error) {
 	return &pair, nil
 }
 
-func (b *BoltMapper) ListUrls() (types.PathUrlPairList, error) {
+func (b *BoltMapper) ListUrls(pagination types.Pagination) (types.PathUrlPairList, error) {
 	var pairs types.PathUrlPairList
-	err := b.foreach(urlMapBucketName, func(key string, value []byte) error {
+	curIdx := 0
+	err := b.forsome(urlMapBucketName, func(key string, value []byte) error {
+		if curIdx < pagination.Offset {
+			curIdx++
+			return nil
+		}
 		var pair types.PathUrlPair
 		err := json.Unmarshal(value, &pair)
 		if err != nil {
 			return err
 		}
 		pairs = append(pairs, &pair)
+		curIdx++
 		return nil
-	})
+	}, pagination.Offset+pagination.Limit)
 	if err != nil {
 		return nil, err
 	}

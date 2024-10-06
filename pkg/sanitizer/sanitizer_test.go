@@ -28,7 +28,7 @@ func (m *NameOnlyMapper) GetUrl(path string) (*types.PathUrlPair, error) {
 	return nil, nil
 }
 
-func (m *NameOnlyMapper) ListUrls() (types.PathUrlPairList, error) {
+func (m *NameOnlyMapper) ListUrls(pagination types.Pagination) (types.PathUrlPairList, error) {
 	return nil, nil
 }
 

@@ -52,9 +52,9 @@ func (m *SqlMapper) DeleteUrl(path string) error {
 	return nil
 }
 
-func (m *SqlMapper) ListUrls() (types.PathUrlPairList, error) {
+func (m *SqlMapper) ListUrls(pagination types.Pagination) (types.PathUrlPairList, error) {
 	var pairs types.PathUrlPairList
-	err := m.db.Find(&pairs).Error
+	err := m.db.Offset(pagination.Offset).Limit(pagination.Limit).Find(&pairs).Error
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,9 @@
 package types
 
+import (
+	"github.com/orsinium-labs/enum"
+)
+
 type MapperIdentityProvider interface {
 	GetType() string
 	GetName() string
@@ -7,13 +11,13 @@ type MapperIdentityProvider interface {
 
 type MapperBasicOperator interface {
 	GetUrl(path string) (*PathUrlPair, error)
-	ListUrls() (PathUrlPairList, error)
+	ListUrls(pagination Pagination) (PathUrlPairList, error)
 	PutUrl(pair *PathUrlPair) (*PathUrlPair, error)
 	DeleteUrl(path string) error
 }
 
 type MapperExtendedOperator interface {
-	SearchUrls(query string, limit int) (PathUrlPairList, error)
+	SearchUrls(query string, mode SearchMode, pagination Pagination) (PathUrlPairList, error)
 }
 
 type MapperConfigurer interface {
@@ -25,7 +29,20 @@ type MapperConfigurer interface {
 type Mapper interface {
 	MapperIdentityProvider
 	MapperBasicOperator
+	// MapperExtendedOperator
 
 	Readonly() bool
 	Teardown() error
 }
+
+type Pagination struct {
+	Offset int
+	Limit  int
+}
+
+type SearchMode enum.Member[string]
+
+var (
+	SearchMode_Include = SearchMode{"include"}
+	SearchMode_Fuzzy   = SearchMode{"fuzzy"}
+)

@@ -10,7 +10,7 @@ service Golinks {
     rpc GetUrl(GetUrlRequest) returns (PathUrlPair) {}
     rpc PutUrl(PathUrlPair) returns (PathUrlPair) {}
     rpc DeleteUrl(DeleteUrlRequest) returns (google.protobuf.Empty) {}
-    rpc ListUrls(google.protobuf.Empty) returns (ListUrlsResponse) {}
+    rpc ListUrls(ListUrlsRequest) returns (ListUrlsResponse) {}
 }
 
 message PathUrlPair {
@@ -29,7 +29,8 @@ message DeleteUrlRequest {
 }
 
 message ListUrlsRequest {
-    string path = 1;
+    int32 offset = 1;
+    int32 limit = 2;
 }
 
 message ListUrlsResponse {

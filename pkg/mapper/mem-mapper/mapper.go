@@ -3,6 +3,7 @@ package mem_mapper
 import (
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/utils"
 )
 
 var _ types.Mapper = (*MemMapper)(nil)
@@ -20,6 +21,10 @@ func (m *MemMapper) GetType() string {
 	return MemMapperConfigType
 }
 
+func (m *MemMapper) Readonly() bool {
+	return true
+}
+
 func (m *MemMapper) Teardown() error {
 	return nil
 }
@@ -31,8 +36,8 @@ func (m *MemMapper) GetUrl(path string) (*types.PathUrlPair, error) {
 	return nil, nil
 }
 
-func (m *MemMapper) ListUrls() (types.PathUrlPairList, error) {
-	return m.pairs.ToList(), nil
+func (m *MemMapper) ListUrls(pagination types.Pagination) (types.PathUrlPairList, error) {
+	return utils.Paginate(m.pairs.ToList(), pagination), nil
 }
 
 func (m *MemMapper) DeleteUrl(path string) error {
@@ -41,8 +46,4 @@ func (m *MemMapper) DeleteUrl(path string) error {
 
 func (m *MemMapper) PutUrl(pair *types.PathUrlPair) (*types.PathUrlPair, error) {
 	return nil, mapper.ErrOperationNotSupported("put")
-}
-
-func (m *MemMapper) Readonly() bool {
-	return true
 }

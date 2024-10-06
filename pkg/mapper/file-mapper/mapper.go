@@ -3,6 +3,7 @@ package file_mapper
 import (
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/utils"
 	"go.uber.org/zap"
 )
 
@@ -38,8 +39,8 @@ func (f *FileMapper) GetUrl(path string) (*types.PathUrlPair, error) {
 	return pair, nil
 }
 
-func (f *FileMapper) ListUrls() (types.PathUrlPairList, error) {
-	return f.pairs.ToList(), nil
+func (f *FileMapper) ListUrls(pagination types.Pagination) (types.PathUrlPairList, error) {
+	return utils.Paginate(f.pairs.ToList(), pagination), nil
 }
 
 func (f *FileMapper) DeleteUrl(path string) error {

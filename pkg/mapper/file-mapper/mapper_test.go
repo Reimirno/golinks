@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/reimirno/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -114,7 +115,7 @@ func TestFileMapper_ListUrls(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.mapper.ListUrls()
+			got, err := tt.mapper.ListUrls(utils.DefaultPagination)
 			assert.NoError(t, err)
 			assert.True(t, tt.want.Equals(&got), "Expected %v, got %v", tt.want, got)
 		})

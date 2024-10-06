@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/reimirno/golinks/pkg/logging"
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
+	"github.com/reimirno/golinks/pkg/utils"
 	"go.uber.org/zap"
 )
 
@@ -83,7 +84,25 @@ func (s *Server) handleGetUrl(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleListUrls(rw http.ResponseWriter, r *http.Request) {
-	pairs, err := s.manager.ListUrls()
+	var err error
+	pagination := utils.DefaultPagination
+	offset := r.URL.Query().Get("offset")
+	if offset != "" {
+		pagination.Offset, err = strconv.Atoi(offset)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+	limit := r.URL.Query().Get("limit")
+	if limit != "" {
+		pagination.Limit, err = strconv.Atoi(limit)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+	pairs, err := s.manager.ListUrls(pagination)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return

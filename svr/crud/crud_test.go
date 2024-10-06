@@ -157,6 +157,14 @@ func TestServer_ListUrls(t *testing.T) {
 			wantErr:       false,
 			numPairs:      2,
 		},
+		{
+			name:          "offset exceeds list length",
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			wantErr:       false,
+			numPairs:      0,
+			pagination:    &types.Pagination{Offset: 10},
+		},
 	}
 
 	for _, test := range tests {

@@ -194,6 +194,20 @@ func TestServer_ListUrls(t *testing.T) {
 			numPairs:      0,
 			offset:        "10",
 		},
+		{
+			name:          "happy path with invalid offset",
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			wantStatus:    http.StatusBadRequest,
+			offset:        "abc",
+		},
+		{
+			name:          "happy path with invalid limit",
+			configurers:   []*mapper.MockMapperConfigurer{mockConfigurer},
+			persistorName: "mock",
+			wantStatus:    http.StatusBadRequest,
+			limit:         "abc",
+		},
 	}
 
 	for _, test := range tests {

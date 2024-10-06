@@ -1,10 +1,11 @@
 package mapper
 
 import (
+	"github.com/stretchr/testify/mock"
+
 	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/reimirno/golinks/pkg/utils"
-	"github.com/stretchr/testify/mock"
 )
 
 // MockMapper is a mock implementation of the Mapper interface for testing purposes.

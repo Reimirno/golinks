@@ -4,8 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 type tempFileConfig struct {

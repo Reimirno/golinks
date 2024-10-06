@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+
 	"github.com/reimirno/golinks/pkg/types"
 )
 
@@ -35,7 +36,7 @@ func (b *BoltMapperConfig) Singleton() bool {
 func (b *BoltMapperConfig) GetMapper() (types.Mapper, error) {
 	var err error
 	var db *bolt.DB
-	db, err = bolt.Open(b.Path, 0600, &bolt.Options{Timeout: time.Duration(b.Timeout) * time.Second})
+	db, err = bolt.Open(b.Path, 0o600, &bolt.Options{Timeout: time.Duration(b.Timeout) * time.Second})
 	if err != nil {
 		return nil, err
 	}

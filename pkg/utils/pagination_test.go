@@ -3,8 +3,9 @@ package utils
 import (
 	"testing"
 
-	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 func TestPaginate(t *testing.T) {

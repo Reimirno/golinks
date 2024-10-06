@@ -5,17 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/reimirno/golinks/pkg/sanitizer"
 )
 
-var (
-	fakeConfigEmptyPath = FileMapperConfig{
-		Name:         "fake",
-		Path:         "",
-		SyncInterval: -1,
-	}
-)
+var fakeConfigEmptyPath = FileMapperConfig{
+	Name:         "fake",
+	Path:         "",
+	SyncInterval: -1,
+}
 
 func TestFileMapperConfig_GetName(t *testing.T) {
 	tests := []struct {
@@ -66,7 +65,6 @@ func TestFileMapperConfig_Singleton(t *testing.T) {
 }
 
 func TestFileMapperConfig_GetMapper(t *testing.T) {
-
 	tests := []struct {
 		name                        string
 		tempFileConfig              *tempFileConfig
@@ -152,7 +150,7 @@ func TestFileMapperConfig_GetMapper(t *testing.T) {
 			assert.True(t, wantClone.Equals(&fileMapper.pairs), "Expected %v, got %v", wantClone, fileMapper.pairs)
 			if tt.syncInterval > 0 {
 				assert.NotNil(t, fileMapper.stop)
-				err = os.WriteFile(tmpfile.Name(), []byte(tt.tempFileConfigNextWrite), 0644)
+				err = os.WriteFile(tmpfile.Name(), []byte(tt.tempFileConfigNextWrite), 0o644)
 				assert.NoError(t, err)
 				time.Sleep(time.Duration(tt.syncInterval+1) * time.Second)
 				assert.Equal(t, tt.expectedPairCountAfterWrite, len(fileMapper.pairs))

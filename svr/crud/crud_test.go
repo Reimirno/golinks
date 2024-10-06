@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/pb"
 	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
-	"github.com/stretchr/testify/assert"
 )
 
 var (

@@ -1,8 +1,9 @@
 package file_mapper
 
 import (
-	"github.com/reimirno/golinks/pkg/types"
 	"github.com/spf13/viper"
+
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 type pathUrlPairWrapper struct {

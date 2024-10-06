@@ -30,7 +30,8 @@ mapper:
       pairs:
         - path: ggl
           url: https://google.com
-`}
+`,
+	}
 	invalidConfigFileContent = &tempFileConfig{
 		name:    "test.yaml",
 		content: "invalid content",

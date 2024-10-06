@@ -3,9 +3,10 @@ package mem_mapper
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
-	"github.com/stretchr/testify/assert"
 )
 
 var fakePair = &types.PathUrlPair{

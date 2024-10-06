@@ -8,11 +8,12 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
+
 	"github.com/reimirno/golinks/pkg/logging"
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/reimirno/golinks/pkg/utils"
-	"go.uber.org/zap"
 )
 
 const crudHttpServiceName = "crud_http"

@@ -1,10 +1,11 @@
 package file_mapper
 
 import (
+	"go.uber.org/zap"
+
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
 	"github.com/reimirno/golinks/pkg/utils"
-	"go.uber.org/zap"
 )
 
 var _ types.Mapper = (*FileMapper)(nil)

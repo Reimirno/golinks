@@ -1,8 +1,9 @@
 package sql_mapper
 
 import (
-	"github.com/reimirno/golinks/pkg/types"
 	"gorm.io/gorm"
+
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 type SqlMapper struct {

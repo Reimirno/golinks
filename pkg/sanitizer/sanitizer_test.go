@@ -3,8 +3,9 @@ package sanitizer
 import (
 	"testing"
 
-	"github.com/reimirno/golinks/pkg/types"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/reimirno/golinks/pkg/types"
 )
 
 type NameOnlyMapper struct {

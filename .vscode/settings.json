@@ -1,0 +1,13 @@
+{
+    "go.useLanguageServer": true,
+    "go.formatTool": "gofumpt",
+    "go.lintTool": "golangci-lint",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "always"
+    },
+    "gopls": {
+        "local": "github.com/reimirno/golinks",
+        "formatting.gofumpt": true,
+    }
+}

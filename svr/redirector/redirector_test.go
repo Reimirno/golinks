@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/reimirno/golinks/pkg/mapper"
 	"github.com/reimirno/golinks/pkg/types"
-	"github.com/stretchr/testify/assert"
 )
 
 var (

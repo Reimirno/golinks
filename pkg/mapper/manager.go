@@ -3,10 +3,11 @@ package mapper
 import (
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/reimirno/golinks/pkg/logging"
 	"github.com/reimirno/golinks/pkg/sanitizer"
 	"github.com/reimirno/golinks/pkg/types"
-	"go.uber.org/zap"
 )
 
 type MapperManager struct {
@@ -96,7 +97,7 @@ func (m *MapperManager) ListUrls(pagination types.Pagination) (types.PathUrlPair
 	m.logger.Debugf("Listing urls")
 	// mapper order is important here
 	// mappers in the front takes precedence over mappers in the back
-	var urlMap = make(types.PathUrlPairMap)
+	urlMap := make(types.PathUrlPairMap)
 	for _, mapper := range m.mappers {
 		urls, err := mapper.ListUrls(pagination)
 		if err != nil {

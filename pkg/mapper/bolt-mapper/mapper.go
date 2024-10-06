@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/boltdb/bolt"
+
 	"github.com/reimirno/golinks/pkg/types"
 )
 

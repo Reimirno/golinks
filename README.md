@@ -35,7 +35,7 @@ Then, go to your browser and try open `localhost:8080/gh`. It should redirect yo
 ## Chrome Extension
 If you would like to just type in `go/gh` (instead of `localhost:8080/go/gh`) and make it work, you need to add `127.0.0.1 go` to your host file, which usually is `/etc/hosts` on Linux/MacOS and `C:\Windows\System32\drivers\etc\hosts` on Windows. 
 
-If you are using Chrome, you can also install the extension that is included in `browser/chrome/src` directory. See [How to load unpacked or unsafe extensions](https://knowledge.workspace.google.com/kb/load-unpacked-extensions-000005962) for guidance. Basically, go to `chrome://extensions`, enable "Developer mode" (using top-right corner switch), click "Load unpacked" and select the `browser/chrome/src` directory.
+If you are using Chrome, you can also install the extension that is included in `browser/chrome/src` directory to your Chrome browser. Basically, go to `chrome://extensions`, enable "Developer mode" (using top-right corner switch), click "Load unpacked" and select the `browser/chrome/src` directory.
 
 Then, in extension configuration page, you can specify the server URL where you are hosting the `redirector` service, which by default is `http://localhost:8080`.
 
@@ -105,13 +105,23 @@ curl -X DELETE -v http://localhost:8082/go/prom
 
 This is intended to be interacted with by a CLI tool.
 
+## Web interface
+
+WIP. Should provide:
+- basic CRUD operations for user to manage the URL mappings.
+- listing all the existing keywords, the list should be searchable and sortable (esp by use count).
+- route go/d/* to the web interface. (need to change chrome extension code)
+- fuzzy search for keywords (need to implement in backend too)
+
 ## Developing
 
-See `Makefile` for commands to run tests, build and clean the project.
+- `redirector`,`crud`,`crud_http`: See `Makefile` for commands to run tests, build and clean the server project.
+- `web`: Go to `web`. `npm i` to install dependencies. `npm run dev` to start the development server.
+- `browser/chrome`: Go to `browser/chrome`. `npm i` to install dependencies. `npm test` to run the tests. See chrome doc to load the extension in browser.
 
 ## Future work
 - Web UI/CLI for easier management of the mappings.
-    - grpc server does not work well with web. We shall either use grpc-web, connect-web or expose a regular REST API.
+- Fuzzy search for keywords
 - Deployment scheme
     - containerize and use Kubernetes, Terraform for deployment. Will be more necessary if we want to scale/use stuff like envoy (for grpc-web proxying for example) or connecting to logging/monitoring services.
 - Authentication/Authorization

@@ -21,12 +21,13 @@ mapper:
       pairs:
         - path: ggl
           url: https://google.com
+        - path: me
+          url: https://github.com/Reimirno/golinks
     - type: bolt
       name: boltdb
       path: maps.db
       timeout: 10
     # - type: sql
     #   name:
-    #   driver: 
-    #   dsn: 
-
+    #   driver:
+    #   dsn:

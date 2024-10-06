@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+    "name": "GoLink Redirector",
+    "version": "1.0",
+    "description": "Allows you just type go/keyword to use golinks. Works with https://github.com/Reimirno/golinks",
+    "permissions": [
+        "tabs",
+        "webNavigation",
+        "storage"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "host_permissions": [
+        "http://*/*",
+        "https://*/*"
+    ],
+    "action": {
+        "default_title": "GoLink Extension",
+        "default_popup": "popup/index.html"
+    },
+    "options_page": "options/index.html"
+}

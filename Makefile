@@ -1,10 +1,11 @@
-GO_CMD=go
-GO_BUILD=$(GO_CMD) build
-GO_TEST=$(GO_CMD) test
+all: build
 
 VERSION?=1.0.0
 COMMIT?=$(shell git rev-parse --short HEAD)
 DATE?=$(shell date +%Y-%m-%dT%H:%M:%SZ)
+
+##### Commands for go server #####
+GO_CMD=go
 
 OUT_DIR = ./build
 PROTO_DIR = ./pkg/pb
@@ -12,8 +13,6 @@ COVERAGE_DIR = ./coverage
 
 MAIN_FILE=main.go
 PROTO_FILE=service.proto
-
-all: build
 
 gen:
 	protoc --version
@@ -27,24 +26,24 @@ gen:
 build: windows linux mac
 
 windows: gen
-	$(call BUILD_BINARY,windows,amd64,$(OUT_DIR)/golink.exe,$(MAIN_FILE))
+	$(call BUILD_GO_BINARY,windows,amd64,$(OUT_DIR)/golink.exe,$(MAIN_FILE))
 
 linux: gen
-	$(call BUILD_BINARY,linux,amd64,$(OUT_DIR)/golink,$(MAIN_FILE))
+	$(call BUILD_GO_BINARY,linux,amd64,$(OUT_DIR)/golink,$(MAIN_FILE))
 
 mac: gen
-	$(call BUILD_BINARY,darwin,amd64,$(OUT_DIR)/golink_darwin,$(MAIN_FILE))
+	$(call BUILD_GO_BINARY,darwin,amd64,$(OUT_DIR)/golink_darwin,$(MAIN_FILE))
 
-define BUILD_BINARY
-	GOOS=$(1) GOARCH=$(2) $(GO_BUILD) -ldflags="-X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildDate=$(DATE)" -o $(3) $(4)
+define BUILD_GO_BINARY
+	GOOS=$(1) GOARCH=$(2) $(GO_CMD) build -ldflags="-X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildDate=$(DATE)" -o $(3) $(4)
 endef
 
 test:
-	$(GO_TEST) ./...
+	$(GO_CMD) test ./...
 
 cover:
 	mkdir -p $(COVERAGE_DIR)
-	$(GO_TEST) -v -coverprofile=$(COVERAGE_DIR)/coverage.out -covermode=atomic ./...
+	$(GO_CMD) test -v -coverprofile=$(COVERAGE_DIR)/coverage.out -covermode=atomic ./...
 	$(GO_CMD) tool cover -html=$(COVERAGE_DIR)/coverage.out -o $(COVERAGE_DIR)/coverage.html
 
 clean:
@@ -53,5 +52,25 @@ clean:
 lint:
 	golangci-lint run --config .golangci.yaml --sort-results
 
+
+##### Commands for browser extension #####
+NPM_CMD=npm
+
+EXT_DIR=browser
+CHROME_DIR=$(EXT_DIR)/chrome
+
 test-chrome:
-	cd browser/chrome && npm test
+	cd $(CHROME_DIR) && $(NPM_CMD) test
+
+
+##### Commands for web app #####
+WEB_DIR=web
+
+dev-web:
+	cd $(WEB_DIR) && $(NPM_CMD) run dev
+
+build-web:
+	cd $(WEB_DIR) && $(NPM_CMD) run build
+
+test-web:
+	cd $(WEB_DIR) && $(NPM_CMD) run test
